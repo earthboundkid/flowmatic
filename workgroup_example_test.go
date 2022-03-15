@@ -7,7 +7,7 @@ import (
 	"github.com/carlmjohnson/workgroup"
 )
 
-func Example() {
+func ExampleStart() {
 	in, out := workgroup.Start(1, func(i int) (float64, error) {
 		if i < 0 {
 			return 0, fmt.Errorf("imaginary: sqrt(%d)", i)

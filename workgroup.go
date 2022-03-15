@@ -17,7 +17,10 @@ func (r Result[Input, Output]) Valid() bool {
 	return r.Err == nil
 }
 
-// Start n workers (or runtime.NumGoroutine workers if n < 1) which consume the in channel, execute task, and send the Result on the out channel. Callers should close the in channel to stop the workers from waiting for tasks. The out channel will be closed once the last result has been sent.
+// Start n workers (or runtime.NumGoroutine workers if n < 1) which consume
+// the in channel, execute task, and send the Result on the out channel.
+// Callers should close the in channel to stop the workers from waiting for tasks.
+// The out channel will be closed once the last result has been sent.
 func Start[Input, Output any](n int, task func(in Input) (out Output, err error)) (in chan<- Input, out <-chan Result[Input, Output]) {
 	if n < 1 {
 		n = runtime.NumGoroutine()

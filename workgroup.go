@@ -23,7 +23,7 @@ func Start[Input, Output any](n int, task func(in Input) (out Output, err error)
 		n = runtime.NumGoroutine()
 	}
 	inch := make(chan Input)
-	ouch := make(chan Result[Input, Output], 1)
+	ouch := make(chan Result[Input, Output], n)
 	var wg sync.WaitGroup
 	wg.Add(n)
 	for i := 0; i < n; i++ {

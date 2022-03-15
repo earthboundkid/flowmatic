@@ -35,11 +35,8 @@ func ExampleProcess() {
 	defer srv.Close()
 	cl := srv.Client()
 
-	// Manager keeps track of which pages have been visited and results graph
-	seen := map[string]bool{}
-	results := map[string][]string{}
-
-	err := workgroup.Process(-1, func(u string) ([]string, error) {
+	// Task fetches a page and extracts the URLs
+	task := func(u string) ([]string, error) {
 		res, err := cl.Get(srv.URL + u)
 		if err != nil {
 			return nil, err
@@ -51,21 +48,33 @@ func ExampleProcess() {
 		}
 
 		return strings.Split(string(body), "\n"), nil
-	}, func(req string, urls []string, err error) ([]string, error) {
+	}
+
+	// Manager keeps track of which pages have been visited and the results graph
+	tried := map[string]int{}
+	results := map[string][]string{}
+	manager := func(req string, urls []string, err error) ([]string, error) {
 		if err != nil {
+			// If there's a problem fetching a page, try three times
+			if tried[req] < 3 {
+				tried[req]++
+				return []string{req}, nil
+			}
 			return nil, err
 		}
 		results[req] = urls
 		var newurls []string
 		for _, u := range urls {
-			if !seen[u] {
+			if tried[u] == 0 {
 				newurls = append(newurls, u)
-				seen[u] = true
+				tried[u]++
 			}
 		}
 		return newurls, nil
-	}, "/")
+	}
 
+	// Process the tasks with as many workers as runtime.NumGoroutine
+	err := workgroup.Process(-1, task, manager, "/")
 	if err != nil {
 		fmt.Println("error", err)
 	}

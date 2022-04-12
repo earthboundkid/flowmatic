@@ -9,7 +9,7 @@ type Manager[Input, Output any] func(Input, Output, error) ([]Input, error)
 // which produce output consumed by a serially run manager. The manager should return a slice of
 // new task inputs based on prior task results, or return an error to halt processing.
 func Process[Input, Output any](n int, task Task[Input, Output], manager Manager[Input, Output], initial ...Input) error {
-	in, out := Start[Input, Output](n, task)
+	in, out := Start(n, task)
 	defer close(in)
 	queue := deque.Of(initial...)
 	inflight := 0

@@ -13,10 +13,7 @@ func Process[Input, Output any](n int, task Task[Input, Output], manager Manager
 	defer close(in)
 	queue := deque.Of(initial...)
 	inflight := 0
-	for {
-		if inflight == 0 && queue.Len() == 0 {
-			return nil
-		}
+	for inflight > 0 || queue.Len() > 0 {
 		inch := in
 		item, ok := queue.Head()
 		if !ok {
@@ -35,4 +32,5 @@ func Process[Input, Output any](n int, task Task[Input, Output], manager Manager
 			queue.Append(items...)
 		}
 	}
+	return nil
 }

@@ -7,13 +7,14 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing/fstest"
+	"time"
 
 	"github.com/carlmjohnson/workgroup"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 
-func ExampleProcess() {
+func ExampleDo() {
 	// Example site to crawl with recursive links
 	srv := httptest.NewServer(http.FileServer(http.FS(fstest.MapFS{
 		"index.html": &fstest.MapFile{
@@ -74,7 +75,7 @@ func ExampleProcess() {
 	}
 
 	// Process the tasks with as many workers as runtime.NumGoroutine
-	err := workgroup.Process(-1, task, manager, "/")
+	err := workgroup.Do(-1, task, manager, "/")
 	if err != nil {
 		fmt.Println("error", err)
 	}
@@ -100,4 +101,50 @@ func ExampleProcess() {
 	// -  /c.html
 	// /c.html links to:
 	// -  /
+}
+
+func ExampleDoTasks() {
+	start := time.Now()
+	task := func(d time.Duration) error {
+		time.Sleep(d)
+		fmt.Println("slept", d)
+		return nil
+	}
+	err := workgroup.DoTasks(-1, task,
+		50*time.Millisecond, 100*time.Millisecond, 200*time.Millisecond)
+	if err != nil {
+		fmt.Println("error", err)
+	}
+	fmt.Println("executed concurrently?", time.Since(start) < 300*time.Millisecond)
+	// Output:
+	// slept 50ms
+	// slept 100ms
+	// slept 200ms
+	// executed concurrently? true
+}
+
+func ExampleDoFuncs() {
+	start := time.Now()
+	err := workgroup.DoFuncs(-1, func() error {
+		time.Sleep(50 * time.Millisecond)
+		fmt.Println("hello")
+		return nil
+	}, func() error {
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println("world")
+		return nil
+	}, func() error {
+		time.Sleep(200 * time.Millisecond)
+		fmt.Println("from workgroup.DoFuncs")
+		return nil
+	})
+	if err != nil {
+		fmt.Println("error", err)
+	}
+	fmt.Println("executed concurrently?", time.Since(start) < 300*time.Millisecond)
+	// Output:
+	// hello
+	// world
+	// from workgroup.DoFuncs
+	// executed concurrently? true
 }

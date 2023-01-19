@@ -9,13 +9,18 @@ type void = struct{}
 // Errors returned by a task do not halt execution,
 // but are joined into a multierror return value.
 func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
-	errs := make([]error, 0, len(initial))
-	_ = Do(n, func(in Input) (void, error) {
+	errs := make([]error, 0, len(initial)+1)
+	err := Do(n, func(in Input) (void, error) {
 		return void{}, task(in)
 	}, func(_ Input, _ void, err error) ([]Input, error) {
-		errs = append(errs, err)
+		if err != nil {
+			errs = append(errs, err)
+		}
 		return nil, nil
 	}, initial...)
+	if err != nil {
+		errs = append(errs, err)
+	}
 	return errors.Join(errs...)
 }
 

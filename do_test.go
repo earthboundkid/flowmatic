@@ -2,6 +2,7 @@ package workgroup_test
 
 import (
 	"fmt"
+	"sync/atomic"
 	"testing"
 
 	"github.com/carlmjohnson/workgroup"
@@ -28,5 +29,52 @@ func TestDo_panic(t *testing.T) {
 	}
 	if fmt.Sprint(triples) != "[3 6]" {
 		t.Fatal(triples)
+	}
+}
+
+func TestDoTasks_panic(t *testing.T) {
+	var n atomic.Int64
+	err := workgroup.DoTasks(1,
+		func(delta int64) error {
+			if delta == 2 {
+				panic("boom")
+			}
+			n.Add(delta)
+			return nil
+		},
+		1, 2, 3)
+	if err == nil {
+		t.Fatal("should have panicked")
+	}
+	if err.Error() != "panic: boom" {
+		t.Fatal(err)
+	}
+	if n.Load() != 1 {
+		t.Fatal(n.Load())
+	}
+}
+
+func TestDoFuncs_panic(t *testing.T) {
+	var n atomic.Int64
+	err := workgroup.DoFuncs(1,
+		func() error {
+			n.Add(1)
+			return nil
+		},
+		func() error {
+			panic("boom")
+		},
+		func() error {
+			n.Add(1)
+			return nil
+		})
+	if err == nil {
+		t.Fatal("should have panicked")
+	}
+	if err.Error() != "panic: boom" {
+		t.Fatal(err)
+	}
+	if n.Load() != 1 {
+		t.Fatal(n.Load())
 	}
 }

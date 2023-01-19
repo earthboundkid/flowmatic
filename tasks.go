@@ -11,7 +11,7 @@ type void = struct{}
 // If a task panics during execution,
 // the panic will be caught and returned as an error halting further execution.
 func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
-	errs := make([]error, 0, len(initial)+1)
+	errs := make([]error, 0, len(initial))
 	err := Do(n, func(in Input) (void, error) {
 		return void{}, task(in)
 	}, func(_ Input, _ void, err error) ([]Input, error) {

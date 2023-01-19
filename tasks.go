@@ -30,7 +30,7 @@ func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
 // that execute each function.
 // Errors returned by a function do not halt execution,
 // but are joined into a multierror return value.
-// If a task panics during execution,
+// If a function panics during execution,
 // the panic will be caught and returned as an error halting further execution.
 func DoFuncs(n int, fns ...func() error) error {
 	return DoTasks(n, func(in func() error) error {

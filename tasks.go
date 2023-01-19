@@ -5,9 +5,11 @@ import "errors"
 type void = struct{}
 
 // DoTasks starts n concurrent workers (or runtime.NumGoroutine workers if n < 1)
-// and processes each input as a task.
+// and processes each initial input as a task.
 // Errors returned by a task do not halt execution,
 // but are joined into a multierror return value.
+// If a task panics during execution,
+// the panic will be caught and returned as an error halting further execution.
 func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
 	errs := make([]error, 0, len(initial)+1)
 	err := Do(n, func(in Input) (void, error) {
@@ -25,9 +27,11 @@ func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
 }
 
 // DoFuncs starts n concurrent workers (or runtime.NumGoroutine workers if n < 1)
-// and executes each function in its own worker.
+// that execute each function.
 // Errors returned by a function do not halt execution,
 // but are joined into a multierror return value.
+// If a task panics during execution,
+// the panic will be caught and returned as an error halting further execution.
 func DoFuncs(n int, fns ...func() error) error {
 	return DoTasks(n, func(in func() error) error {
 		return in()

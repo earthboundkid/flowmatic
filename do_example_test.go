@@ -1,6 +1,7 @@
 package workgroup_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -146,5 +147,40 @@ func ExampleDoFuncs() {
 	// hello
 	// world
 	// from workgroup.DoFuncs
+	// executed concurrently? true
+}
+
+func ExampleDoTasks_cancel() {
+	// To cancel execution early, communicate via a context.CancelFunc
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	start := time.Now()
+	task := func(d time.Duration) error {
+		t := time.NewTimer(d)
+		defer t.Stop()
+
+		select {
+		case <-t.C:
+			fmt.Println("slept", d)
+		case <-ctx.Done():
+			fmt.Println("canceled")
+		}
+
+		if d == 100*time.Millisecond {
+			cancel()
+		}
+		return nil
+	}
+	err := workgroup.DoTasks(-1, task,
+		50*time.Millisecond, 100*time.Millisecond, 200*time.Millisecond)
+	if err != nil {
+		fmt.Println("error", err)
+	}
+	fmt.Println("executed concurrently?", time.Since(start) < 200*time.Millisecond)
+	// Output:
+	// slept 50ms
+	// slept 100ms
+	// canceled
 	// executed concurrently? true
 }

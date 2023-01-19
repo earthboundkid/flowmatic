@@ -75,8 +75,8 @@ func ExampleDo() {
 		return newurls, nil
 	}
 
-	// Process the tasks with as many workers as runtime.NumGoroutine
-	err := workgroup.Do(-1, task, manager, "/")
+	// Process the tasks with as many workers as GOMAXPROCS
+	err := workgroup.Do(workgroup.MaxProcs, task, manager, "/")
 	if err != nil {
 		fmt.Println("error", err)
 	}
@@ -111,7 +111,7 @@ func ExampleDoTasks() {
 		fmt.Println("slept", d)
 		return nil
 	}
-	err := workgroup.DoTasks(-1, task,
+	err := workgroup.DoTasks(3, task,
 		50*time.Millisecond, 100*time.Millisecond, 200*time.Millisecond)
 	if err != nil {
 		fmt.Println("error", err)
@@ -126,7 +126,7 @@ func ExampleDoTasks() {
 
 func ExampleDoFuncs() {
 	start := time.Now()
-	err := workgroup.DoFuncs(-1, func() error {
+	err := workgroup.DoFuncs(3, func() error {
 		time.Sleep(50 * time.Millisecond)
 		fmt.Println("hello")
 		return nil
@@ -157,6 +157,7 @@ func ExampleDoTasks_cancel() {
 
 	start := time.Now()
 	task := func(d time.Duration) error {
+		// simulate doing some work with a context
 		t := time.NewTimer(d)
 		defer t.Stop()
 
@@ -167,17 +168,18 @@ func ExampleDoTasks_cancel() {
 			fmt.Println("canceled")
 		}
 
+		// if some condition applies, cancel the context for everyone
 		if d == 100*time.Millisecond {
 			cancel()
 		}
 		return nil
 	}
-	err := workgroup.DoTasks(-1, task,
-		50*time.Millisecond, 100*time.Millisecond, 200*time.Millisecond)
+	err := workgroup.DoTasks(3, task,
+		50*time.Millisecond, 100*time.Millisecond, 300*time.Millisecond)
 	if err != nil {
 		fmt.Println("error", err)
 	}
-	fmt.Println("executed concurrently?", time.Since(start) < 200*time.Millisecond)
+	fmt.Println("executed concurrently?", time.Since(start) < 150*time.Millisecond)
 	// Output:
 	// slept 50ms
 	// slept 100ms

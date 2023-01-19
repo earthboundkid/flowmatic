@@ -4,7 +4,7 @@ import "errors"
 
 type void = struct{}
 
-// DoTasks starts n concurrent workers (or runtime.NumGoroutine workers if n < 1)
+// DoTasks starts n concurrent workers (or GOMAXPROCS workers if n < 1)
 // and processes each initial input as a task.
 // Errors returned by a task do not halt execution,
 // but are joined into a multierror return value.
@@ -26,7 +26,7 @@ func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
 	return errors.Join(errs...)
 }
 
-// DoFuncs starts n concurrent workers (or runtime.NumGoroutine workers if n < 1)
+// DoFuncs starts n concurrent workers (or GOMAXPROCS workers if n < 1)
 // that execute each function.
 // Errors returned by a function do not halt execution,
 // but are joined into a multierror return value.

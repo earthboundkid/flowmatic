@@ -6,13 +6,16 @@ import (
 	"github.com/carlmjohnson/deque"
 )
 
+// Use GOMAXPROCS workers when doing tasks.
+const MaxProcs = -1
+
 // Manager is a function that serially examines Task results to see if it produced any new Inputs.
 type Manager[Input, Output any] func(Input, Output, error) ([]Input, error)
 
 // Task is a function that can concurrently transform an input into an output.
 type Task[Input, Output any] func(in Input) (out Output, err error)
 
-// Do tasks using n concurrent workers (or runtime.NumGoroutine workers if n < 1)
+// Do tasks using n concurrent workers (or GOMAXPROCS workers if n < 1)
 // which produce output consumed by a serially run manager.
 // The manager should return a slice of new task inputs based on prior task results,
 // or return an error to halt processing.

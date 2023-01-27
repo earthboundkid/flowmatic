@@ -10,8 +10,8 @@ type void = struct{}
 // but are joined into a multierror return value.
 // If a task panics during execution,
 // the panic will be caught and returned as an error halting further execution.
-func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
-	errs := make([]error, 0, len(initial))
+func DoTasks[Input any](n int, items []Input, task func(Input) error) error {
+	errs := make([]error, 0, len(items))
 	err := Do(n, func(in Input) (void, error) {
 		return void{}, task(in)
 	}, func(_ Input, _ void, err error) ([]Input, error) {
@@ -19,7 +19,7 @@ func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
 			errs = append(errs, err)
 		}
 		return nil, nil
-	}, initial...)
+	}, items...)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -33,7 +33,7 @@ func DoTasks[Input any](n int, task func(Input) error, initial ...Input) error {
 // If a function panics during execution,
 // the panic will be caught and returned as an error halting further execution.
 func DoFuncs(n int, fns ...func() error) error {
-	return DoTasks(n, func(in func() error) error {
+	return DoTasks(n, fns, func(in func() error) error {
 		return in()
-	}, fns...)
+	})
 }

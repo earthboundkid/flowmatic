@@ -34,15 +34,14 @@ func TestDo_panic(t *testing.T) {
 
 func TestDoTasks_panic(t *testing.T) {
 	var n atomic.Int64
-	err := workgroup.DoTasks(1,
+	err := workgroup.DoTasks(1, []int64{1, 2, 3},
 		func(delta int64) error {
 			if delta == 2 {
 				panic("boom")
 			}
 			n.Add(delta)
 			return nil
-		},
-		1, 2, 3)
+		})
 	if err == nil {
 		t.Fatal("should have panicked")
 	}

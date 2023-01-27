@@ -21,13 +21,12 @@ err := workgroup.DoFuncs(3,
 To execute homogenous tasks with a set number of workers, use `workgroup.DoTasks`:
 
 ```go
-task := func(thing someType) error {
-    thing.Frobincate()
-    return thing.DoSomething()
-}
 things := []someType{thingA, thingB, thingC}
 
-err := workgroup.DoTasks(len(things), task, things...)
+err := workgroup.DoTasks(len(things), things, func(thing someType) error {
+    foo := thing.Frobincate()
+    return foo.DoSomething()
+})
 ```
 
 ## Manage tasks that spawn new tasks

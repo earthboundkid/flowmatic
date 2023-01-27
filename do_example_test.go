@@ -105,14 +105,17 @@ func ExampleDo() {
 }
 
 func ExampleDoTasks() {
+	times := []time.Duration{
+		50 * time.Millisecond,
+		100 * time.Millisecond,
+		200 * time.Millisecond,
+	}
 	start := time.Now()
-	task := func(d time.Duration) error {
+	err := workgroup.DoTasks(3, times, func(d time.Duration) error {
 		time.Sleep(d)
 		fmt.Println("slept", d)
 		return nil
-	}
-	err := workgroup.DoTasks(3, task,
-		50*time.Millisecond, 100*time.Millisecond, 200*time.Millisecond)
+	})
 	if err != nil {
 		fmt.Println("error", err)
 	}
@@ -155,7 +158,11 @@ func ExampleDoTasks_cancel() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	start := time.Now()
+	times := []time.Duration{
+		50 * time.Millisecond,
+		100 * time.Millisecond,
+		300 * time.Millisecond,
+	}
 	task := func(d time.Duration) error {
 		// simulate doing some work with a context
 		t := time.NewTimer(d)
@@ -174,15 +181,14 @@ func ExampleDoTasks_cancel() {
 		}
 		return nil
 	}
-	err := workgroup.DoTasks(3, task,
-		50*time.Millisecond, 100*time.Millisecond, 300*time.Millisecond)
-	if err != nil {
+	start := time.Now()
+	if err := workgroup.DoTasks(3, times, task); err != nil {
 		fmt.Println("error", err)
 	}
-	fmt.Println("executed concurrently?", time.Since(start) < 150*time.Millisecond)
+	fmt.Println("exited promptly?", time.Since(start) < 150*time.Millisecond)
 	// Output:
 	// slept 50ms
 	// slept 100ms
 	// canceled
-	// executed concurrently? true
+	// exited promptly? true
 }

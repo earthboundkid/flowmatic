@@ -1,7 +1,10 @@
-# Workgroup [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/workgroup)](https://pkg.go.dev/github.com/carlmjohnson/workgroup)
+# Workgroup [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/workgroup)](https://pkg.go.dev/github.com/carlmjohnson/workgroup) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/workgroup)](https://goreportcard.com/report/github.com/carlmjohnson/workgroup) [![Gocover.io](https://gocover.io/_badge/github.com/carlmjohnson/workgroup)](https://gocover.io/github.com/carlmjohnson/workgroup)
+
 Workgroup is a generic Go concurrent task runner. It requires Go 1.20+.
 
-## Execute heterogenous tasks
+## How it works
+
+### Execute heterogenous tasks
 To execute heterogenous tasks with a set number of workers, use `workgroup.DoFuncs`:
 
 ```go
@@ -17,7 +20,7 @@ err := workgroup.DoFuncs(3,
     })
 ```
 
-## Execute homogenous tasks
+### Execute homogenous tasks
 To execute homogenous tasks with a set number of workers, use `workgroup.DoTasks`:
 
 ```go
@@ -29,7 +32,7 @@ err := workgroup.DoTasks(len(things), things, func(thing someType) error {
 })
 ```
 
-## Manage tasks that spawn new tasks
+### Manage tasks that spawn new tasks
 For tasks that may create more work, use `workgroup.Do`.
 Create a manager that will be serially executed,
 and have it save the results

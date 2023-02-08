@@ -1,11 +1,25 @@
 # Workgroup [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/workgroup)](https://pkg.go.dev/github.com/carlmjohnson/workgroup) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/workgroup)](https://goreportcard.com/report/github.com/carlmjohnson/workgroup) [![Gocover.io](https://gocover.io/_badge/github.com/carlmjohnson/workgroup)](https://gocover.io/github.com/carlmjohnson/workgroup)
 
-Workgroup is a generic Go concurrent task runner. It requires Go 1.20+.
+Workgroup is a generic Go library that provides a structured approach to concurrent programming. It lets you easily manage concurrent tasks in a manner that is predictable and scalable, and it provides a simple, yet effective approach to structuring concurrency.
+
+Workgroup has a simple API consisting of three core functions: `DoFuncs`, `DoTasks`, and `Do`. It automatically handles spawning workers, collecting errors, and recovering from panics.
+
+Workgroup requires Go 1.20+.
 
 ## How it works
 
 ### Execute heterogenous tasks
-To execute heterogenous tasks with a set number of workers, use `workgroup.DoFuncs`:
+One problem that workgroup solves is managing the execution of multiple tasks in parallel that are independent of each other. For example, let's say you want to send data to three different downstream APIs. If any of the sends fail, you want to return an error. With traditional Go concurrency, this can quickly become complex and difficult to manage, with Goroutines, channels, and sync.WaitGroups to keep track of. Workgroup makes it simple.
+
+To execute heterogenous tasks with a set number of workers, just use `workgroup.DoFuncs`:
+
+<table>
+<tr>
+<th><code>workgroup</code></th>
+<th><code>stdlib</code></th>
+</tr>
+<tr>
+<td>
 
 ```go
 err := workgroup.DoFuncs(3,
@@ -19,6 +33,51 @@ err := workgroup.DoFuncs(3,
         return doThingC(),
     })
 ```
+
+</td>
+<td>
+
+```go
+var wg sync.WaitGroup
+var errs []error
+errChan := make(chan error)
+
+wg.Add(3)
+go func() {
+    defer wg.Done()
+    if err := doThingA(); err != nil {
+        errChan <- err
+    }
+}()
+go func() {
+    defer wg.Done()
+    if err := doThingB(); err != nil {
+        errChan <- err
+    }
+}()
+go func() {
+    defer wg.Done()
+    if err := doThingC(); err != nil {
+        errChan <- err
+    }
+}()
+
+go func() {
+    wg.Wait()
+    close(errChan)
+}()
+
+for err := range errChan {
+    errs = append(errs, err)
+}
+
+err := errors.Join(errs...)
+```
+
+</td>
+</tr>
+</table>
+
 
 ### Execute homogenous tasks
 To execute homogenous tasks with a set number of workers, use `workgroup.DoTasks`:

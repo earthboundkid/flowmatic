@@ -80,22 +80,69 @@ err := errors.Join(errs...)
 
 
 ### Execute homogenous tasks
-To execute homogenous tasks with a set number of workers, use `workgroup.DoTasks`:
+`workgroup.DoTasks` is useful if you need to execute the same task on slice of items using a worker pool:
+
+<table>
+<tr>
+<th><code>workgroup</code></th>
+<th><code>stdlib</code></th>
+</tr>
+<tr>
+<td>
 
 ```go
 things := []someType{thingA, thingB, thingC}
 
-err := workgroup.DoTasks(len(things), things, func(thing someType) error {
-    foo := thing.Frobincate()
-    return foo.DoSomething()
-})
+err := workgroup.DoTasks(numWorkers, things, 
+    func(thing someType) error {
+        foo := thing.Frobincate()
+        return foo.DoSomething()
+    })
 ```
+
+</td>
+<td>
+
+```go
+things := []someType{thingA, thingB, thingC}
+
+work := make(chan someType)
+errs := make(chan error)
+
+for i := 0; i < numWorkers; i++ {
+    go func() {
+        for thing := range work {
+            foo := thing.Frobincate()
+            errs <- foo.DoSomething()
+        }
+    }()
+}
+
+go func() {
+    for _, thing := range things {
+            work <- thing
+    }
+
+    close(tasks)
+}()
+
+var collectedErrs []error
+for i := 0; i < len(things); i++ {
+    collectedErrs = append(collectedErrs, <-errs)
+}
+
+err := errors.Join(collectedErrs...)
+```
+
+</td>
+</tr>
+</table>
 
 ### Manage tasks that spawn new tasks
 For tasks that may create more work, use `workgroup.Do`.
 Create a manager that will be serially executed,
 and have it save the results
-and examine the output of tasks to decide if there is more work to do.
+and examine the output of tasks to decide if there is more work to be done.
 
 ```go
 // Task fetches a page and extracts the URLs

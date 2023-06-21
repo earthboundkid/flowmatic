@@ -24,13 +24,13 @@ func DoAll[Input any](n int, items []Input, task func(Input) error) error {
 	return errors.Join(errs...)
 }
 
-// DoFuncs starts n concurrent workers (or GOMAXPROCS workers if n < 1)
+// Do starts n concurrent workers (or GOMAXPROCS workers if n < 1)
 // that execute each function.
 // Errors returned by a function do not halt execution,
 // but are joined into a multierror return value.
 // If a function panics during execution,
 // the panic will be caught and rethrown in the main Goroutine.
-func DoFuncs(n int, fns ...func() error) error {
+func Do(n int, fns ...func() error) error {
 	return DoAll(n, fns, func(in func() error) error {
 		return in()
 	})

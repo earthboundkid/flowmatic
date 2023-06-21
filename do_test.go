@@ -73,7 +73,7 @@ func TestDoAll_panic(t *testing.T) {
 	}
 }
 
-func TestDoFuncs_panic(t *testing.T) {
+func TestDo_panic(t *testing.T) {
 	var (
 		n   atomic.Int64
 		err error
@@ -81,7 +81,7 @@ func TestDoFuncs_panic(t *testing.T) {
 	)
 	func() {
 		defer func() { r = recover() }()
-		err = workgroup.DoFuncs(1,
+		err = workgroup.Do(1,
 			func() error {
 				n.Add(1)
 				return nil

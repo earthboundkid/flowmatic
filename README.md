@@ -2,7 +2,7 @@
 
 Workgroup is a generic Go library that provides a structured approach to concurrent programming. It lets you easily manage concurrent tasks in a manner that is predictable and scalable, and it provides a simple, yet effective approach to structuring concurrency.
 
-Workgroup has a simple API consisting of three core functions: `DoFuncs`, `DoAll`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and recovering from panics.
+Workgroup has a simple API consisting of three core functions: `Do`, `DoAll`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and recovering from panics.
 
 Workgroup requires Go 1.20+.
 
@@ -11,7 +11,7 @@ Workgroup requires Go 1.20+.
 ### Execute heterogenous tasks
 One problem that workgroup solves is managing the execution of multiple tasks in parallel that are independent of each other. For example, let's say you want to send data to three different downstream APIs. If any of the sends fail, you want to return an error. With traditional Go concurrency, this can quickly become complex and difficult to manage, with Goroutines, channels, and sync.WaitGroups to keep track of. Workgroup makes it simple.
 
-To execute heterogenous tasks with a set number of workers, just use `workgroup.DoFuncs`:
+To execute heterogenous tasks with a set number of workers, just use `workgroup.Do`:
 
 <table>
 <tr>
@@ -22,7 +22,7 @@ To execute heterogenous tasks with a set number of workers, just use `workgroup.
 <td>
 
 ```go
-err := workgroup.DoFuncs(3,
+err := workgroup.Do(3,
     func() error {
         return doThingA(),
     },

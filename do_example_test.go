@@ -124,9 +124,9 @@ func ExampleDoAll() {
 	// executed concurrently? true
 }
 
-func ExampleDoFuncs() {
+func ExampleDo() {
 	start := time.Now()
-	err := workgroup.DoFuncs(3, func() error {
+	err := workgroup.Do(3, func() error {
 		time.Sleep(50 * time.Millisecond)
 		fmt.Println("hello")
 		return nil
@@ -136,7 +136,7 @@ func ExampleDoFuncs() {
 		return nil
 	}, func() error {
 		time.Sleep(200 * time.Millisecond)
-		fmt.Println("from workgroup.DoFuncs")
+		fmt.Println("from workgroup.Do")
 		return nil
 	})
 	if err != nil {
@@ -146,7 +146,7 @@ func ExampleDoFuncs() {
 	// Output:
 	// hello
 	// world
-	// from workgroup.DoFuncs
+	// from workgroup.Do
 	// executed concurrently? true
 }
 

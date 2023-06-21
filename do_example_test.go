@@ -104,14 +104,14 @@ func ExampleDo() {
 	// -  /
 }
 
-func ExampleDoTasks() {
+func ExampleDoAll() {
 	times := []time.Duration{
 		50 * time.Millisecond,
 		100 * time.Millisecond,
 		200 * time.Millisecond,
 	}
 	start := time.Now()
-	err := workgroup.DoTasks(3, times, func(d time.Duration) error {
+	err := workgroup.DoAll(3, times, func(d time.Duration) error {
 		time.Sleep(d)
 		fmt.Println("slept", d)
 		return nil
@@ -153,7 +153,7 @@ func ExampleDoFuncs() {
 	// executed concurrently? true
 }
 
-func ExampleDoTasks_cancel() {
+func ExampleDoAll_cancel() {
 	// To cancel execution early, communicate via a context.CancelFunc
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -182,7 +182,7 @@ func ExampleDoTasks_cancel() {
 		return nil
 	}
 	start := time.Now()
-	if err := workgroup.DoTasks(3, times, task); err != nil {
+	if err := workgroup.DoAll(3, times, task); err != nil {
 		fmt.Println("error", err)
 	}
 	fmt.Println("exited promptly?", time.Since(start) < 150*time.Millisecond)

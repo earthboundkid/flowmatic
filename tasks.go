@@ -4,13 +4,13 @@ import "errors"
 
 type void = struct{}
 
-// DoTasks starts n concurrent workers (or GOMAXPROCS workers if n < 1)
+// DoAll starts n concurrent workers (or GOMAXPROCS workers if n < 1)
 // and processes each initial input as a task.
 // Errors returned by a task do not halt execution,
 // but are joined into a multierror return value.
 // If a task panics during execution,
 // the panic will be caught and returned as an error halting further execution.
-func DoTasks[Input any](n int, items []Input, task func(Input) error) error {
+func DoAll[Input any](n int, items []Input, task func(Input) error) error {
 	errs := make([]error, 0, len(items))
 	err := Do(n, func(in Input) (void, error) {
 		return void{}, task(in)
@@ -33,7 +33,7 @@ func DoTasks[Input any](n int, items []Input, task func(Input) error) error {
 // If a function panics during execution,
 // the panic will be caught and returned as an error halting further execution.
 func DoFuncs(n int, fns ...func() error) error {
-	return DoTasks(n, fns, func(in func() error) error {
+	return DoAll(n, fns, func(in func() error) error {
 		return in()
 	})
 }

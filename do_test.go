@@ -34,9 +34,9 @@ func TestDo_panic(t *testing.T) {
 	}
 }
 
-func TestDoTasks_panic(t *testing.T) {
+func TestDoAll_panic(t *testing.T) {
 	var n atomic.Int64
-	err := workgroup.DoTasks(1, []int64{1, 2, 3},
+	err := workgroup.DoAll(1, []int64{1, 2, 3},
 		func(delta int64) error {
 			if delta == 2 {
 				panic("boom")

@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func ExampleDo() {
+func ExampleDoTasks() {
 	// Example site to crawl with recursive links
 	srv := httptest.NewServer(http.FileServer(http.FS(fstest.MapFS{
 		"index.html": &fstest.MapFile{
@@ -76,7 +76,7 @@ func ExampleDo() {
 	}
 
 	// Process the tasks with as many workers as GOMAXPROCS
-	workgroup.Do(workgroup.MaxProcs, task, manager, "/")
+	workgroup.DoTasks(workgroup.MaxProcs, task, manager, "/")
 
 	keys := maps.Keys(results)
 	slices.Sort(keys)

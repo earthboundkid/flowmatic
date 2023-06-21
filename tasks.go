@@ -12,7 +12,7 @@ type void = struct{}
 // the panic will be caught and rethrown in the main Goroutine.
 func DoAll[Input any](n int, items []Input, task func(Input) error) error {
 	errs := make([]error, 0, len(items))
-	Do(n, func(in Input) (void, error) {
+	DoTasks(n, func(in Input) (void, error) {
 		return void{}, task(in)
 	}, func(_ Input, _ void, err error) ([]Input, bool) {
 		if err != nil {

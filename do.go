@@ -14,13 +14,13 @@ type Manager[Input, Output any] func(Input, Output, error) (tasks []Input, ok bo
 // Task is a function that can concurrently transform an input into an output.
 type Task[Input, Output any] func(in Input) (out Output, err error)
 
-// Do tasks using n concurrent workers (or GOMAXPROCS workers if n < 1)
+// DoTasks does tasks using n concurrent workers (or GOMAXPROCS workers if n < 1)
 // which produce output consumed by a serially run manager.
 // The manager should return a slice of new task inputs based on prior task results,
 // or return false to halt processing.
 // If a task panics during execution,
 // the panic will be caught and rethrown in the main Goroutine.
-func Do[Input, Output any](n int, task Task[Input, Output], manager Manager[Input, Output], initial ...Input) {
+func DoTasks[Input, Output any](n int, task Task[Input, Output], manager Manager[Input, Output], initial ...Input) {
 	in, out := start(n, task)
 	defer func() {
 		close(in)

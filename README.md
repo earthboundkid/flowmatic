@@ -2,7 +2,7 @@
 
 Workgroup is a generic Go library that provides a structured approach to concurrent programming. It lets you easily manage concurrent tasks in a manner that is predictable and scalable, and it provides a simple, yet effective approach to structuring concurrency.
 
-Workgroup has a simple API consisting of three core functions: `DoFuncs`, `DoAll`, and `Do`. It automatically handles spawning workers, collecting errors, and recovering from panics.
+Workgroup has a simple API consisting of three core functions: `DoFuncs`, `DoAll`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and recovering from panics.
 
 Workgroup requires Go 1.20+.
 
@@ -139,7 +139,7 @@ err := errors.Join(collectedErrs...)
 </table>
 
 ### Manage tasks that spawn new tasks
-For tasks that may create more work, use `workgroup.Do`.
+For tasks that may create more work, use `workgroup.DoTasks`.
 Create a manager that will be serially executed,
 and have it save the results
 and examine the output of tasks to decide if there is more work to be done.
@@ -157,12 +157,14 @@ task := func(u string) ([]string, error) {
 // Map from page to links
 // Doesn't need a lock because only the manager touches it
 results := map[string][]string{}
+var managerErr error
 
 // Manager keeps track of which pages have been visited and the results graph
-manager := func(req string, links []string, err error) ([]string, error) {
+manager := func(req string, links []string, err error) ([]string, bool) {
     // Halt execution after the first error
     if err != nil {
-        return nil, err
+        managerErr = err
+        return nil, false
     }
     // Save final results in map
     results[req] = urls
@@ -179,12 +181,13 @@ manager := func(req string, links []string, err error) ([]string, error) {
         // Add placeholder to map to prevent double scraping
         results[link] = nil
     }
-    return newpages, nil
+    return newpages, true
 }
 
 // Process the tasks with as many workers as GOMAXPROCS
-err := workgroup.Do(workgroup.MaxProcs, task, manager, "http://example.com/")
-if err != nil {
-    fmt.Println("error", err)
+workgroup.DoTasks(workgroup.MaxProcs, task, manager, "http://example.com/")
+// Check if anything went wrong
+if managerErr != nil {
+    fmt.Println("error", managerErr)
 }
 ```

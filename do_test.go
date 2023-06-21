@@ -10,7 +10,7 @@ import (
 	"github.com/carlmjohnson/workgroup"
 )
 
-func TestDo_panic(t *testing.T) {
+func TestDoTasks_panic(t *testing.T) {
 	task := func(n int) (int, error) {
 		if n == 3 {
 			panic("3!!")
@@ -27,7 +27,7 @@ func TestDo_panic(t *testing.T) {
 		defer func() {
 			r = recover()
 		}()
-		workgroup.Do(1, task, manager, 1, 2, 3, 4)
+		workgroup.DoTasks(1, task, manager, 1, 2, 3, 4)
 	}()
 	if r == nil {
 		t.Fatal("should have panicked")
@@ -108,7 +108,7 @@ func TestDoFuncs_panic(t *testing.T) {
 	}
 }
 
-func TestDo_drainage(t *testing.T) {
+func TestDoTasks_drainage(t *testing.T) {
 	const sleepTime = 10 * time.Millisecond
 	b := false
 	task := func(n int) (int, error) {
@@ -134,7 +134,7 @@ func TestDo_drainage(t *testing.T) {
 		}
 		return nil, true
 	}
-	workgroup.Do(5, task, manager, 0, 1)
+	workgroup.DoTasks(5, task, manager, 0, 1)
 	if s := fmt.Sprint(m); s != "map[1:text string]" {
 		t.Fatal(s)
 	}

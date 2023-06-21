@@ -18,16 +18,22 @@ func TestDo_panic(t *testing.T) {
 		return n * 3, nil
 	}
 	var triples []int
-	manager := func(n, triple int, err error) ([]int, error) {
+	manager := func(n, triple int, err error) ([]int, bool) {
 		triples = append(triples, triple)
-		return nil, nil
+		return nil, true
 	}
-	err := workgroup.Do(1, task, manager, 1, 2, 3, 4)
-	if err == nil {
+	var r any
+	func() {
+		defer func() {
+			r = recover()
+		}()
+		workgroup.Do(1, task, manager, 1, 2, 3, 4)
+	}()
+	if r == nil {
 		t.Fatal("should have panicked")
 	}
-	if err.Error() != "panic: 3!!" {
-		t.Fatal(err)
+	if r != "3!!" {
+		t.Fatal(r)
 	}
 	if fmt.Sprint(triples) != "[3 6]" {
 		t.Fatal(triples)
@@ -35,20 +41,32 @@ func TestDo_panic(t *testing.T) {
 }
 
 func TestDoAll_panic(t *testing.T) {
-	var n atomic.Int64
-	err := workgroup.DoAll(1, []int64{1, 2, 3},
-		func(delta int64) error {
-			if delta == 2 {
-				panic("boom")
-			}
-			n.Add(delta)
-			return nil
-		})
-	if err == nil {
+	var (
+		n   atomic.Int64
+		err error
+		r   any
+	)
+	func() {
+		defer func() {
+			r = recover()
+		}()
+		err = workgroup.DoAll(1, []int64{1, 2, 3},
+			func(delta int64) error {
+				if delta == 2 {
+					panic("boom")
+				}
+				n.Add(delta)
+				return nil
+			})
+	}()
+	if err != nil {
 		t.Fatal("should have panicked")
 	}
-	if err.Error() != "panic: boom" {
-		t.Fatal(err)
+	if r == nil {
+		t.Fatal("should have panicked")
+	}
+	if r != "boom" {
+		t.Fatal(r)
 	}
 	if n.Load() != 1 {
 		t.Fatal(n.Load())
@@ -56,24 +74,34 @@ func TestDoAll_panic(t *testing.T) {
 }
 
 func TestDoFuncs_panic(t *testing.T) {
-	var n atomic.Int64
-	err := workgroup.DoFuncs(1,
-		func() error {
-			n.Add(1)
-			return nil
-		},
-		func() error {
-			panic("boom")
-		},
-		func() error {
-			n.Add(1)
-			return nil
-		})
-	if err == nil {
+	var (
+		n   atomic.Int64
+		err error
+		r   any
+	)
+	func() {
+		defer func() { r = recover() }()
+		err = workgroup.DoFuncs(1,
+			func() error {
+				n.Add(1)
+				return nil
+			},
+			func() error {
+				panic("boom")
+			},
+			func() error {
+				n.Add(1)
+				return nil
+			})
+	}()
+	if err != nil {
 		t.Fatal("should have panicked")
 	}
-	if err.Error() != "panic: boom" {
-		t.Fatal(err)
+	if r == nil {
+		t.Fatal("should have panicked")
+	}
+	if r != "boom" {
+		t.Fatal(r)
 	}
 	if n.Load() != 1 {
 		t.Fatal(n.Load())
@@ -92,19 +120,23 @@ func TestDo_drainage(t *testing.T) {
 		return 0, nil
 	}
 	start := time.Now()
-	manager := func(in, out int, err error) ([]int, error) {
-		t.Log(in, out, err)
+	m := map[int]struct {
+		int
+		error
+	}{}
+	manager := func(in, out int, err error) ([]int, bool) {
+		m[in] = struct {
+			int
+			error
+		}{out, err}
 		if err != nil {
-			return nil, err
+			return nil, false
 		}
-		return nil, nil
+		return nil, true
 	}
-	err := workgroup.Do(5, task, manager, 0, 1)
-	if err == nil {
-		t.Fatal("returned err")
-	}
-	if err.Error() != "text string" {
-		t.Fatal(err)
+	workgroup.Do(5, task, manager, 0, 1)
+	if s := fmt.Sprint(m); s != "map[1:text string]" {
+		t.Fatal(s)
 	}
 	if time.Since(start) < sleepTime {
 		t.Fatal("didn't sleep enough")

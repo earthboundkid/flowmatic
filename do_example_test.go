@@ -55,14 +55,14 @@ func ExampleDo() {
 	// Manager keeps track of which pages have been visited and the results graph
 	tried := map[string]int{}
 	results := map[string][]string{}
-	manager := func(req string, urls []string, err error) ([]string, error) {
+	manager := func(req string, urls []string, err error) ([]string, bool) {
 		if err != nil {
 			// If there's a problem fetching a page, try three times
 			if tried[req] < 3 {
 				tried[req]++
-				return []string{req}, nil
+				return []string{req}, true
 			}
-			return nil, err
+			return nil, false
 		}
 		results[req] = urls
 		var newurls []string
@@ -72,14 +72,11 @@ func ExampleDo() {
 				tried[u]++
 			}
 		}
-		return newurls, nil
+		return newurls, true
 	}
 
 	// Process the tasks with as many workers as GOMAXPROCS
-	err := workgroup.Do(workgroup.MaxProcs, task, manager, "/")
-	if err != nil {
-		fmt.Println("error", err)
-	}
+	workgroup.Do(workgroup.MaxProcs, task, manager, "/")
 
 	keys := maps.Keys(results)
 	slices.Sort(keys)

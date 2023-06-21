@@ -1,8 +1,8 @@
 # Workgroup [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/workgroup)](https://pkg.go.dev/github.com/carlmjohnson/workgroup) [![Coverage Status](https://coveralls.io/repos/github/carlmjohnson/workgroup/badge.svg)](https://coveralls.io/github/carlmjohnson/workgroup) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/workgroup)](https://goreportcard.com/report/github.com/carlmjohnson/workgroup)
 
-Workgroup is a generic Go library that provides a structured approach to concurrent programming. It lets you easily manage concurrent tasks in a manner that is predictable and scalable, and it provides a simple, yet effective approach to structuring concurrency.
+Workgroup is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
 
-Workgroup has a simple API consisting of three core functions: `Do`, `DoEach`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and recovering from panics.
+Workgroup has a easy to use API consisting of three core functions: `Do`, `DoEach`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and propagating panics.
 
 Workgroup requires Go 1.20+.
 
@@ -191,3 +191,11 @@ if managerErr != nil {
     fmt.Println("error", managerErr)
 }
 ```
+
+## Note on panicking
+
+In Go, if there is a panic in a goroutine, and that panic is not recovered, the whole process is shutdown. There are pros and cons to this approach. The pro is that if the panic is symptom of a programming error in the application, no further damage can be done by the application. The con is that in many cases, this leads to a shutdown in a situation that might be recoverable.
+
+On side effect of this situation is that Go standard HTTP server will catch panics that occur in one of its HTTP handlers, and the server can continue serving requests, but the server cannot catch panics that occur in separate goroutines, and these can cause the whole server to go offline.
+
+Workgroup works by catching a panic that occurs in one of its tasks and repropagating it in the parent goroutine, so the panic can be caught and logged at the appropriate level.

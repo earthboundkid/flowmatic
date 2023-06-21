@@ -16,7 +16,7 @@ type Task[Input, Output any] func(in Input) (out Output, err error)
 // The manager should return a slice of new task inputs based on prior task results,
 // or return false to halt processing.
 // If a task panics during execution,
-// the panic will be caught and rethrown in the main Goroutine.
+// the panic will be caught and rethrown in the parent Goroutine.
 func DoTasks[Input, Output any](n int, task Task[Input, Output], manager Manager[Input, Output], initial ...Input) {
 	in, out := start(n, task)
 	defer func() {

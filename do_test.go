@@ -1,9 +1,11 @@
 package workgroup_test
 
 import (
+	"errors"
 	"fmt"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/carlmjohnson/workgroup"
 )
@@ -75,5 +77,39 @@ func TestDoFuncs_panic(t *testing.T) {
 	}
 	if n.Load() != 1 {
 		t.Fatal(n.Load())
+	}
+}
+
+func TestDo_drainage(t *testing.T) {
+	const sleepTime = 10 * time.Millisecond
+	b := false
+	task := func(n int) (int, error) {
+		if n == 1 {
+			return 0, errors.New("text string")
+		}
+		time.Sleep(sleepTime)
+		b = true
+		return 0, nil
+	}
+	start := time.Now()
+	manager := func(in, out int, err error) ([]int, error) {
+		t.Log(in, out, err)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	err := workgroup.Do(5, task, manager, 0, 1)
+	if err == nil {
+		t.Fatal("returned err")
+	}
+	if err.Error() != "text string" {
+		t.Fatal(err)
+	}
+	if time.Since(start) < sleepTime {
+		t.Fatal("didn't sleep enough")
+	}
+	if !b {
+		t.Fatal("didn't finish")
 	}
 }

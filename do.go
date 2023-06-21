@@ -23,7 +23,12 @@ type Task[Input, Output any] func(in Input) (out Output, err error)
 // the panic will be caught and returned as an error halting further execution.
 func Do[Input, Output any](n int, task Task[Input, Output], manager Manager[Input, Output], initial ...Input) error {
 	in, out := start(n, task)
-	defer close(in)
+	defer func() {
+		close(in)
+		// drain any waiting tasks
+		for range out {
+		}
+	}()
 	queue := deque.Of(initial...)
 	inflight := 0
 	for inflight > 0 || queue.Len() > 0 {

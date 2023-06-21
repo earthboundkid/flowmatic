@@ -1,4 +1,4 @@
-# Workgroup [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/workgroup)](https://pkg.go.dev/github.com/carlmjohnson/workgroup) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/workgroup)](https://goreportcard.com/report/github.com/carlmjohnson/workgroup)
+# Workgroup [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/workgroup)](https://pkg.go.dev/github.com/carlmjohnson/workgroup) [![Coverage Status](https://coveralls.io/repos/github/carlmjohnson/workgroup/badge.svg)](https://coveralls.io/github/carlmjohnson/workgroup) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/workgroup)](https://goreportcard.com/report/github.com/carlmjohnson/workgroup)
 
 Workgroup is a generic Go library that provides a structured approach to concurrent programming. It lets you easily manage concurrent tasks in a manner that is predictable and scalable, and it provides a simple, yet effective approach to structuring concurrency.
 

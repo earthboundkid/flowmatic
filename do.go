@@ -7,7 +7,7 @@ package workgroup
 // If a function panics during execution,
 // the panic will be caught and rethrown in the main Goroutine.
 func Do(n int, fns ...func() error) error {
-	return DoAll(n, fns, func(in func() error) error {
+	return DoEach(n, fns, func(in func() error) error {
 		return in()
 	})
 }

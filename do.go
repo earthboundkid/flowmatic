@@ -6,7 +6,7 @@ import (
 	"github.com/carlmjohnson/deque"
 )
 
-// Use GOMAXPROCS workers when doing tasks.
+// MaxProcs means use GOMAXPROCS workers when doing tasks.
 const MaxProcs = -1
 
 // Manager is a function that serially examines Task results to see if it produced any new Inputs.

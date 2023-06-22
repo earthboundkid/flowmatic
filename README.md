@@ -22,7 +22,7 @@ To execute heterogenous tasks with a set number of workers, just use `workgroup.
 <td>
 
 ```go
-err := workgroup.Do(3,
+err := workgroup.Do(
     func() error {
         return doThingA(),
     },

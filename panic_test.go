@@ -77,7 +77,7 @@ func TestDo_panic(t *testing.T) {
 		err error
 	)
 	r := try(func() {
-		err = workgroup.Do(1,
+		err = workgroup.Do(
 			func() error {
 				n.Add(1)
 				return nil

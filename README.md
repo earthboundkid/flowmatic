@@ -9,9 +9,9 @@ Workgroup requires Go 1.20+.
 ## How it works
 
 ### Execute heterogenous tasks
-One problem that workgroup solves is managing the execution of multiple tasks in parallel that are independent of each other. For example, let's say you want to send data to three different downstream APIs. If any of the sends fail, you want to return an error. With traditional Go concurrency, this can quickly become complex and difficult to manage, with Goroutines, channels, and sync.WaitGroups to keep track of. Workgroup makes it simple.
+One problem that workgroup solves is managing the execution of multiple tasks in parallel that are independent of each other. For example, let's say you want to send data to three different downstream APIs. If any of the sends fail, you want to return an error. With traditional Go concurrency, this can quickly become complex and difficult to manage, with Goroutines, channels, and `sync.WaitGroup`s to keep track of. Workgroup makes it simple.
 
-To execute heterogenous tasks with a set number of workers, just use `workgroup.Do`:
+To execute heterogenous tasks, just use `workgroup.Do`:
 
 <table>
 <tr>
@@ -112,6 +112,7 @@ errs := make(chan error)
 for i := 0; i < numWorkers; i++ {
     go func() {
         for thing := range work {
+            // Omitted: panic handling!
             foo := thing.Frobincate()
             errs <- foo.DoSomething()
         }
@@ -191,6 +192,10 @@ if managerErr != nil {
     fmt.Println("error", managerErr)
 }
 ```
+
+Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `workgroup.DoTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
+
+Centralizing control in the manager makes reasoning about the code radically simpler. When writing locking code, if you have M states and N methods, you need to think about all N states in each of the M methods, giving you an M × N code explosion. By centralizing the logic, the N states only need to be considered in one location: the manager.
 
 ## Note on panicking
 

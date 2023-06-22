@@ -194,8 +194,8 @@ if managerErr != nil {
 
 ## Note on panicking
 
-In Go, if there is a panic in a goroutine, and that panic is not recovered, the whole process is shutdown. There are pros and cons to this approach. The pro is that if the panic is symptom of a programming error in the application, no further damage can be done by the application. The con is that in many cases, this leads to a shutdown in a situation that might be recoverable.
+In Go, if there is a panic in a goroutine, and that panic is not recovered, then the whole process is shutdown. There are pros and cons to this approach. The pro is that if the panic is the symptom of a programming error in the application, no further damage can be done by the application. The con is that in many cases, this leads to a shutdown in a situation that might be recoverable.
 
-On side effect of this situation is that Go standard HTTP server will catch panics that occur in one of its HTTP handlers, and the server can continue serving requests, but the server cannot catch panics that occur in separate goroutines, and these can cause the whole server to go offline.
+As a result, although the Go standard HTTP server will catch panics that occur in one of its HTTP handlers and continue serving requests, but the server cannot catch panics that occur in separate goroutines, and these will cause the whole server to go offline.
 
-Workgroup works by catching a panic that occurs in one of its tasks and repropagating it in the parent goroutine, so the panic can be caught and logged at the appropriate level.
+Workgroup fixes this problem by catching a panic that occurs in one of its worker goroutines and repropagating it in the parent goroutine, so the panic can be caught and logged at the appropriate level.

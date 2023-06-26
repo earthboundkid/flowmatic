@@ -137,17 +137,17 @@ func ExampleDo() {
 			return nil
 		}, func() error {
 			time.Sleep(200 * time.Millisecond)
-			fmt.Println("from workgroup.Do")
+			fmt.Println("from flowmatic.Do")
 			return nil
 		})
 	if err != nil {
 		fmt.Println("error", err)
 	}
-	fmt.Println("executed concurrently?", time.Since(start) < 300*time.Millisecond)
+	fmt.Println("executed concurrently?", time.Since(start) < 250*time.Millisecond)
 	// Output:
 	// hello
 	// world
-	// from workgroup.Do
+	// from flowmatic.Do
 	// executed concurrently? true
 }
 

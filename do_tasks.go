@@ -18,7 +18,7 @@ type Task[Input, Output any] func(in Input) (out Output, err error)
 // If a task panics during execution,
 // the panic will be caught and rethrown in the parent Goroutine.
 func DoTasks[Input, Output any](n int, task Task[Input, Output], manager Manager[Input, Output], initial ...Input) {
-	in, out := start(n, task)
+	in, out := TaskPool(n, task)
 	defer func() {
 		close(in)
 		// drain any waiting tasks

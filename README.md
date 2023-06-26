@@ -1,15 +1,15 @@
 # Flowmatic [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/flowmatic)](https://pkg.go.dev/github.com/carlmjohnson/flowmatic) [![Coverage Status](https://coveralls.io/repos/github/carlmjohnson/flowmatic/badge.svg)](https://coveralls.io/github/carlmjohnson/flowmatic) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/flowmatic)](https://goreportcard.com/report/github.com/carlmjohnson/flowmatic)
 
-![flowmatic](https://github.com/carlmjohnson/flowmatic/assets/222245/c14936e9-bb35-405b-926e-4cfeb8003439)
+![Flowmatic logo](https://github.com/carlmjohnson/flowmatic/assets/222245/c14936e9-bb35-405b-926e-4cfeb8003439)
 
 
 Flowmatic is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
 
-Flowmatic has a easy to use API consisting of three core functions: `Do`, `DoEach`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and propagating panics.
+Flowmatic has a easy to use API consisting of four functions: `Do`, `DoEach`, `DoTasks`, and `TaskPool`. It automatically handles spawning workers, collecting errors, and propagating panics.
 
 Flowmatic requires Go 1.20+.
 
-## How it works
+## How to use Flowmatic
 
 ### Execute heterogenous tasks
 One problem that Flowmatic solves is managing the execution of multiple tasks in parallel that are independent of each other. For example, let's say you want to send data to three different downstream APIs. If any of the sends fail, you want to return an error. With traditional Go concurrency, this can quickly become complex and difficult to manage, with Goroutines, channels, and `sync.WaitGroup`s to keep track of. Flowmatic makes it simple.
@@ -199,6 +199,177 @@ if managerErr != nil {
 Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.DoTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
 
 Centralizing control in the manager makes reasoning about the code radically simpler. When writing locking code, if you have M states and N methods, you need to think about all N states in each of the M methods, giving you an M × N code explosion. By centralizing the logic, the N states only need to be considered in one location: the manager.
+
+### Advanced patterns with TaskPool
+
+For very advanced uses, `flowmatic.TaskPool` takes the boilerplate out of managing a pool of workers. Compare Flowmatic to this example from x/sync/errgroup:
+
+<table>
+<tr>
+<th><code>flowmatic</code></th>
+<th><code>x/sync/errgroup</code></th>
+</tr>
+<tr>
+<td>
+
+```go
+func main() {
+	m, err := MD5All(context.Background(), "testdata/md5all")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for k, sum := range m {
+		fmt.Printf("%s:\t%x\n", k, sum)
+	}
+}
+
+// MD5All reads all the files in the file tree rooted at root
+// and returns a map from file path to the MD5 sum of the file's contents.
+// If the directory walk fails or any read operation fails,
+// MD5All returns an error.
+func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error) {
+	// Make a pool of 20 digesters
+	in, out := flowmatic.TaskPool(20, func(path string) (*[md5.Size]byte, error) {
+		return digest(ctx, path)
+	})
+
+	m := make(map[string][md5.Size]byte)
+	// Open two goroutines:
+	// one for reading file names by walking the filesystem
+	// one for recording results from the digesters in a map
+	err := flowmatic.Do(
+		func() error {
+			defer close(in)
+
+			return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if !info.Mode().IsRegular() {
+					return nil
+				}
+				select {
+				case in <- path:
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+
+				return nil
+			})
+		},
+		func() error {
+			for r := range out {
+				if r.Out != nil {
+					m[r.In] = *r.Out
+				}
+			}
+			return nil
+		},
+	)
+
+	return m, err
+}
+
+func digest(ctx context.Context, path string) (*[md5.Size]byte, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	hash := md5.Sum(data)
+	return &hash, ctx.Err()
+}
+```
+
+</td>
+<td>
+
+```go
+func main() {
+	m, err := MD5All(context.Background(), ".")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for k, sum := range m {
+		fmt.Printf("%s:\t%x\n", k, sum)
+	}
+}
+
+type result struct {
+	path string
+	sum  [md5.Size]byte
+}
+
+// MD5All reads all the files in the file tree rooted at root and returns a map
+// from file path to the MD5 sum of the file's contents. If the directory walk
+// fails or any read operation fails, MD5All returns an error.
+func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error) {
+	// ctx is canceled when g.Wait() returns. When this version of MD5All returns
+	// - even in case of error! - we know that all of the goroutines have finished
+	// and the memory they were using can be garbage-collected.
+	g, ctx := errgroup.WithContext(ctx)
+	paths := make(chan string)
+
+	g.Go(func() error {
+		defer close(paths)
+		return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.Mode().IsRegular() {
+				return nil
+			}
+			select {
+			case paths <- path:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+			return nil
+		})
+	})
+
+	// Start a fixed number of goroutines to read and digest files.
+	c := make(chan result)
+	const numDigesters = 20
+	for i := 0; i < numDigesters; i++ {
+		g.Go(func() error {
+			for path := range paths {
+				data, err := ioutil.ReadFile(path)
+				if err != nil {
+					return err
+				}
+				select {
+				case c <- result{path, md5.Sum(data)}:
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+			return nil
+		})
+	}
+	go func() {
+		g.Wait()
+		close(c)
+	}()
+
+	m := make(map[string][md5.Size]byte)
+	for r := range c {
+		m[r.path] = r.sum
+	}
+	// Check whether any of the goroutines failed. Since g is accumulating the
+	// errors, we don't need to send them (or check for them) in the individual
+	// results sent on the channel.
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+```
+
+</td>
+</tr>
+</table>
 
 ## Note on panicking
 

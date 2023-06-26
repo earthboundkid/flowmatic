@@ -1,4 +1,4 @@
-package workgroup
+package flowmatic
 
 import (
 	"github.com/carlmjohnson/deque"

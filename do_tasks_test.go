@@ -1,4 +1,4 @@
-package workgroup_test
+package flowmatic_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/carlmjohnson/workgroup"
+	"github.com/carlmjohnson/flowmatic"
 )
 
 func TestDoTasks_drainage(t *testing.T) {
@@ -35,7 +35,7 @@ func TestDoTasks_drainage(t *testing.T) {
 		}
 		return nil, true
 	}
-	workgroup.DoTasks(5, task, manager, 0, 1)
+	flowmatic.DoTasks(5, task, manager, 0, 1)
 	if s := fmt.Sprint(m); s != "map[1:text string]" {
 		t.Fatal(s)
 	}

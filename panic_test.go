@@ -1,11 +1,11 @@
-package workgroup_test
+package flowmatic_test
 
 import (
 	"fmt"
 	"sync/atomic"
 	"testing"
 
-	"github.com/carlmjohnson/workgroup"
+	"github.com/carlmjohnson/flowmatic"
 )
 
 func try(f func()) (r any) {
@@ -29,7 +29,7 @@ func TestDoTasks_panic(t *testing.T) {
 		return nil, true
 	}
 	r := try(func() {
-		workgroup.DoTasks(1, task, manager, 1, 2, 3, 4)
+		flowmatic.DoTasks(1, task, manager, 1, 2, 3, 4)
 	})
 	if r == nil {
 		t.Fatal("should have panicked")
@@ -48,7 +48,7 @@ func TestDoEach_panic(t *testing.T) {
 		err error
 	)
 	r := try(func() {
-		err = workgroup.DoEach(1, []int64{1, 2, 3},
+		err = flowmatic.DoEach(1, []int64{1, 2, 3},
 			func(delta int64) error {
 				if delta == 2 {
 					panic("boom")
@@ -77,7 +77,7 @@ func TestDo_panic(t *testing.T) {
 		err error
 	)
 	r := try(func() {
-		err = workgroup.Do(
+		err = flowmatic.Do(
 			func() error {
 				n.Add(1)
 				return nil

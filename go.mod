@@ -1,4 +1,4 @@
-module github.com/carlmjohnson/workgroup
+module github.com/carlmjohnson/flowmatic
 
 go 1.20
 

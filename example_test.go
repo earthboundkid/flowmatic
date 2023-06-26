@@ -1,4 +1,4 @@
-package workgroup_test
+package flowmatic_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/carlmjohnson/workgroup"
+	"github.com/carlmjohnson/flowmatic"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
@@ -76,7 +76,7 @@ func ExampleDoTasks() {
 	}
 
 	// Process the tasks with as many workers as GOMAXPROCS
-	workgroup.DoTasks(workgroup.MaxProcs, task, manager, "/")
+	flowmatic.DoTasks(flowmatic.MaxProcs, task, manager, "/")
 
 	keys := maps.Keys(results)
 	slices.Sort(keys)
@@ -108,7 +108,7 @@ func ExampleDoEach() {
 		200 * time.Millisecond,
 	}
 	start := time.Now()
-	err := workgroup.DoEach(3, times, func(d time.Duration) error {
+	err := flowmatic.DoEach(3, times, func(d time.Duration) error {
 		time.Sleep(d)
 		fmt.Println("slept", d)
 		return nil
@@ -126,7 +126,7 @@ func ExampleDoEach() {
 
 func ExampleDo() {
 	start := time.Now()
-	err := workgroup.Do(
+	err := flowmatic.Do(
 		func() error {
 			time.Sleep(50 * time.Millisecond)
 			fmt.Println("hello")
@@ -180,7 +180,7 @@ func ExampleDoEach_cancel() {
 		return nil
 	}
 	start := time.Now()
-	if err := workgroup.DoEach(3, times, task); err != nil {
+	if err := flowmatic.DoEach(3, times, task); err != nil {
 		fmt.Println("error", err)
 	}
 	fmt.Println("exited promptly?", time.Since(start) < 150*time.Millisecond)

@@ -1,4 +1,4 @@
-package workgroup
+package flowmatic
 
 // Do starts each function in its own goroutine.
 // Errors returned by a function do not halt execution,

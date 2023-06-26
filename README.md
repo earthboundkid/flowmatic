@@ -1,5 +1,8 @@
 # Flowmatic [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/flowmatic)](https://pkg.go.dev/github.com/carlmjohnson/flowmatic) [![Coverage Status](https://coveralls.io/repos/github/carlmjohnson/flowmatic/badge.svg)](https://coveralls.io/github/carlmjohnson/flowmatic) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/flowmatic)](https://goreportcard.com/report/github.com/carlmjohnson/flowmatic)
 
+![flowmatic](https://github.com/carlmjohnson/flowmatic/assets/222245/c14936e9-bb35-405b-926e-4cfeb8003439)
+
+
 Flowmatic is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
 
 Flowmatic has a easy to use API consisting of three core functions: `Do`, `DoEach`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and propagating panics.

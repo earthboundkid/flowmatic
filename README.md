@@ -1,28 +1,28 @@
-# Workgroup [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/workgroup)](https://pkg.go.dev/github.com/carlmjohnson/workgroup) [![Coverage Status](https://coveralls.io/repos/github/carlmjohnson/workgroup/badge.svg)](https://coveralls.io/github/carlmjohnson/workgroup) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/workgroup)](https://goreportcard.com/report/github.com/carlmjohnson/workgroup)
+# Flowmatic [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/flowmatic)](https://pkg.go.dev/github.com/carlmjohnson/flowmatic) [![Coverage Status](https://coveralls.io/repos/github/carlmjohnson/flowmatic/badge.svg)](https://coveralls.io/github/carlmjohnson/flowmatic) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/flowmatic)](https://goreportcard.com/report/github.com/carlmjohnson/flowmatic)
 
-Workgroup is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
+Flowmatic is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
 
-Workgroup has a easy to use API consisting of three core functions: `Do`, `DoEach`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and propagating panics.
+Flowmatic has a easy to use API consisting of three core functions: `Do`, `DoEach`, and `DoTasks`. It automatically handles spawning workers, collecting errors, and propagating panics.
 
-Workgroup requires Go 1.20+.
+Flowmatic requires Go 1.20+.
 
 ## How it works
 
 ### Execute heterogenous tasks
-One problem that workgroup solves is managing the execution of multiple tasks in parallel that are independent of each other. For example, let's say you want to send data to three different downstream APIs. If any of the sends fail, you want to return an error. With traditional Go concurrency, this can quickly become complex and difficult to manage, with Goroutines, channels, and `sync.WaitGroup`s to keep track of. Workgroup makes it simple.
+One problem that Flowmatic solves is managing the execution of multiple tasks in parallel that are independent of each other. For example, let's say you want to send data to three different downstream APIs. If any of the sends fail, you want to return an error. With traditional Go concurrency, this can quickly become complex and difficult to manage, with Goroutines, channels, and `sync.WaitGroup`s to keep track of. Flowmatic makes it simple.
 
-To execute heterogenous tasks, just use `workgroup.Do`:
+To execute heterogenous tasks, just use `flowmatic.Do`:
 
 <table>
 <tr>
-<th><code>workgroup</code></th>
+<th><code>flowmatic</code></th>
 <th><code>stdlib</code></th>
 </tr>
 <tr>
 <td>
 
 ```go
-err := workgroup.Do(
+err := flowmatic.Do(
     func() error {
         return doThingA(),
     },
@@ -80,11 +80,11 @@ err := errors.Join(errs...)
 
 
 ### Execute homogenous tasks
-`workgroup.DoEach` is useful if you need to execute the same task on each item in a slice using a worker pool:
+`flowmatic.DoEach` is useful if you need to execute the same task on each item in a slice using a worker pool:
 
 <table>
 <tr>
-<th><code>workgroup</code></th>
+<th><code>flowmatic</code></th>
 <th><code>stdlib</code></th>
 </tr>
 <tr>
@@ -93,7 +93,7 @@ err := errors.Join(errs...)
 ```go
 things := []someType{thingA, thingB, thingC}
 
-err := workgroup.DoEach(numWorkers, things,
+err := flowmatic.DoEach(numWorkers, things,
     func(thing someType) error {
         foo := thing.Frobincate()
         return foo.DoSomething()
@@ -140,7 +140,7 @@ err := errors.Join(collectedErrs...)
 </table>
 
 ### Manage tasks that spawn new tasks
-For tasks that may create more work, use `workgroup.DoTasks`.
+For tasks that may create more work, use `flowmatic.DoTasks`.
 Create a manager that will be serially executed,
 and have it save the results
 and examine the output of tasks to decide if there is more work to be done.
@@ -186,14 +186,14 @@ manager := func(req string, links []string, err error) ([]string, bool) {
 }
 
 // Process the tasks with as many workers as GOMAXPROCS
-workgroup.DoTasks(workgroup.MaxProcs, task, manager, "http://example.com/")
+flowmatic.DoTasks(flowmatic.MaxProcs, task, manager, "http://example.com/")
 // Check if anything went wrong
 if managerErr != nil {
     fmt.Println("error", managerErr)
 }
 ```
 
-Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `workgroup.DoTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
+Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.DoTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
 
 Centralizing control in the manager makes reasoning about the code radically simpler. When writing locking code, if you have M states and N methods, you need to think about all N states in each of the M methods, giving you an M × N code explosion. By centralizing the logic, the N states only need to be considered in one location: the manager.
 
@@ -203,4 +203,4 @@ In Go, if there is a panic in a goroutine, and that panic is not recovered, then
 
 As a result, although the Go standard HTTP server will catch panics that occur in one of its HTTP handlers and continue serving requests, but the server cannot catch panics that occur in separate goroutines, and these will cause the whole server to go offline.
 
-Workgroup fixes this problem by catching a panic that occurs in one of its worker goroutines and repropagating it in the parent goroutine, so the panic can be caught and logged at the appropriate level.
+Flowmatic fixes this problem by catching a panic that occurs in one of its worker goroutines and repropagating it in the parent goroutine, so the panic can be caught and logged at the appropriate level.

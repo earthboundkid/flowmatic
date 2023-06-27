@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func ExampleDoTasks() {
+func ExampleManageTasks() {
 	// Example site to crawl with recursive links
 	srv := httptest.NewServer(http.FileServer(http.FS(fstest.MapFS{
 		"index.html": &fstest.MapFile{
@@ -76,7 +76,7 @@ func ExampleDoTasks() {
 	}
 
 	// Process the tasks with as many workers as GOMAXPROCS
-	flowmatic.DoTasks(flowmatic.MaxProcs, task, manager, "/")
+	flowmatic.ManageTasks(flowmatic.MaxProcs, task, manager, "/")
 
 	keys := maps.Keys(results)
 	slices.Sort(keys)
@@ -101,14 +101,14 @@ func ExampleDoTasks() {
 	// -  /
 }
 
-func ExampleDoEach() {
+func ExampleEach() {
 	times := []time.Duration{
 		50 * time.Millisecond,
 		100 * time.Millisecond,
 		200 * time.Millisecond,
 	}
 	start := time.Now()
-	err := flowmatic.DoEach(3, times, func(d time.Duration) error {
+	err := flowmatic.Each(3, times, func(d time.Duration) error {
 		time.Sleep(d)
 		fmt.Println("slept", d)
 		return nil
@@ -151,7 +151,7 @@ func ExampleDo() {
 	// executed concurrently? true
 }
 
-func ExampleDoEach_cancel() {
+func ExampleEach_cancel() {
 	// To cancel execution early, communicate via a context.CancelFunc
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -180,7 +180,7 @@ func ExampleDoEach_cancel() {
 		return nil
 	}
 	start := time.Now()
-	if err := flowmatic.DoEach(3, times, task); err != nil {
+	if err := flowmatic.Each(3, times, task); err != nil {
 		fmt.Println("error", err)
 	}
 	fmt.Println("exited promptly?", time.Since(start) < 150*time.Millisecond)

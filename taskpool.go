@@ -13,19 +13,19 @@ type Result[Input, Output any] struct {
 	Panic any
 }
 
-// TaskPool starts n workers (or GOMAXPROCS workers if n < 1) which consume
+// TaskPool starts numWorkers workers (or GOMAXPROCS workers if numWorkers < 1) which consume
 // the in channel, execute task, and send the Result on the out channel.
 // Callers should close the in channel to stop the workers from waiting for tasks.
 // The out channel will be closed once the last result has been sent.
-func TaskPool[Input, Output any](n int, task Task[Input, Output]) (in chan<- Input, out <-chan Result[Input, Output]) {
-	if n < 1 {
-		n = runtime.GOMAXPROCS(0)
+func TaskPool[Input, Output any](numWorkers int, task Task[Input, Output]) (in chan<- Input, out <-chan Result[Input, Output]) {
+	if numWorkers < 1 {
+		numWorkers = runtime.GOMAXPROCS(0)
 	}
 	inch := make(chan Input)
-	ouch := make(chan Result[Input, Output], n)
+	ouch := make(chan Result[Input, Output], numWorkers)
 	var wg sync.WaitGroup
-	wg.Add(n)
-	for i := 0; i < n; i++ {
+	wg.Add(numWorkers)
+	for i := 0; i < numWorkers; i++ {
 		go func() {
 			defer wg.Done()
 			for inval := range inch {

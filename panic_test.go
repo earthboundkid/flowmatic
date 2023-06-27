@@ -16,7 +16,7 @@ func try(f func()) (r any) {
 	return
 }
 
-func TestDoTasks_panic(t *testing.T) {
+func TestManageTasks_panic(t *testing.T) {
 	task := func(n int) (int, error) {
 		if n == 3 {
 			panic("3!!")
@@ -29,7 +29,7 @@ func TestDoTasks_panic(t *testing.T) {
 		return nil, true
 	}
 	r := try(func() {
-		flowmatic.DoTasks(1, task, manager, 1, 2, 3, 4)
+		flowmatic.ManageTasks(1, task, manager, 1, 2, 3, 4)
 	})
 	if r == nil {
 		t.Fatal("should have panicked")
@@ -42,13 +42,13 @@ func TestDoTasks_panic(t *testing.T) {
 	}
 }
 
-func TestDoEach_panic(t *testing.T) {
+func TestEach_panic(t *testing.T) {
 	var (
 		n   atomic.Int64
 		err error
 	)
 	r := try(func() {
-		err = flowmatic.DoEach(1, []int64{1, 2, 3},
+		err = flowmatic.Each(1, []int64{1, 2, 3},
 			func(delta int64) error {
 				if delta == 2 {
 					panic("boom")

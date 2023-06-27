@@ -5,7 +5,7 @@
 
 Flowmatic is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
 
-Flowmatic has a easy to use API consisting of four functions: `Do`, `DoEach`, `DoTasks`, and `TaskPool`. It automatically handles spawning workers, collecting errors, and propagating panics.
+Flowmatic has a easy to use API consisting of four functions: `Do`, `Each`, `ManageTasks`, and `TaskPool`. It automatically handles spawning workers, collecting errors, and propagating panics.
 
 Flowmatic requires Go 1.20+.
 
@@ -83,7 +83,7 @@ err := errors.Join(errs...)
 
 
 ### Execute homogenous tasks
-`flowmatic.DoEach` is useful if you need to execute the same task on each item in a slice using a worker pool:
+`flowmatic.Each` is useful if you need to execute the same task on each item in a slice using a worker pool:
 
 <table>
 <tr>
@@ -96,7 +96,7 @@ err := errors.Join(errs...)
 ```go
 things := []someType{thingA, thingB, thingC}
 
-err := flowmatic.DoEach(numWorkers, things,
+err := flowmatic.Each(numWorkers, things,
     func(thing someType) error {
         foo := thing.Frobincate()
         return foo.DoSomething()
@@ -143,7 +143,7 @@ err := errors.Join(collectedErrs...)
 </table>
 
 ### Manage tasks that spawn new tasks
-For tasks that may create more work, use `flowmatic.DoTasks`.
+For tasks that may create more work, use `flowmatic.ManageTasks`.
 Create a manager that will be serially executed,
 and have it save the results
 and examine the output of tasks to decide if there is more work to be done.
@@ -189,14 +189,14 @@ manager := func(req string, links []string, err error) ([]string, bool) {
 }
 
 // Process the tasks with as many workers as GOMAXPROCS
-flowmatic.DoTasks(flowmatic.MaxProcs, task, manager, "http://example.com/")
+flowmatic.ManageTasks(flowmatic.MaxProcs, task, manager, "http://example.com/")
 // Check if anything went wrong
 if managerErr != nil {
     fmt.Println("error", managerErr)
 }
 ```
 
-Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.DoTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
+Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.ManageTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
 
 Centralizing control in the manager makes reasoning about the code radically simpler. When writing locking code, if you have M states and N methods, you need to think about all N states in each of the M methods, giving you an M × N code explosion. By centralizing the logic, the N states only need to be considered in one location: the manager.
 

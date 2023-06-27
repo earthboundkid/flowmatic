@@ -7,10 +7,10 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
-func TestDoEach_err(t *testing.T) {
+func TestEach_err(t *testing.T) {
 	a := errors.New("a")
 	b := errors.New("b")
-	errs := flowmatic.DoEach(1, []int{1, 2, 3}, func(i int) error {
+	errs := flowmatic.Each(1, []int{1, 2, 3}, func(i int) error {
 		switch i {
 		case 1:
 			return a

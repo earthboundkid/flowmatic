@@ -9,7 +9,7 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
-func TestDoTasks_drainage(t *testing.T) {
+func TestManageTasks_drainage(t *testing.T) {
 	const sleepTime = 10 * time.Millisecond
 	b := false
 	task := func(n int) (int, error) {
@@ -35,7 +35,7 @@ func TestDoTasks_drainage(t *testing.T) {
 		}
 		return nil, true
 	}
-	flowmatic.DoTasks(5, task, manager, 0, 1)
+	flowmatic.ManageTasks(5, task, manager, 0, 1)
 	if s := fmt.Sprint(m); s != "map[1:text string]" {
 		t.Fatal(s)
 	}

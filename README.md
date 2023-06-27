@@ -202,19 +202,15 @@ Centralizing control in the manager makes reasoning about the code radically sim
 
 ### Advanced patterns with TaskPool
 
-For very advanced uses, `flowmatic.TaskPool` takes the boilerplate out of managing a pool of workers. Compare Flowmatic to this example from x/sync/errgroup:
+For very advanced uses, `flowmatic.TaskPool` takes the boilerplate out of managing a pool of workers. Compare Flowmatic to [this example from x/sync/errgroup](https://pkg.go.dev/golang.org/x/sync/errgroup#example-Group-Pipeline):
 
 <table>
 <tr>
-<th><code>flowmatic</code></th>
-<th><code>x/sync/errgroup</code></th>
-</tr>
-<tr>
-<td>
+<td colspan="2">
 
 ```go
 func main() {
-	m, err := MD5All(context.Background(), "testdata/md5all")
+	m, err := MD5All(context.Background(), ".")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -223,7 +219,17 @@ func main() {
 		fmt.Printf("%s:\t%x\n", k, sum)
 	}
 }
+```
 
+</td></tr>
+<tr>
+<th><code>flowmatic</code></th>
+<th><code>x/sync/errgroup</code></th>
+</tr>
+<tr><td>
+
+
+```go
 // MD5All reads all the files in the file tree rooted at root
 // and returns a map from file path to the MD5 sum of the file's contents.
 // If the directory walk fails or any read operation fails,
@@ -240,23 +246,7 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	// one for recording results from the digesters in a map
 	err := flowmatic.Do(
 		func() error {
-			defer close(in)
-
-			return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if !info.Mode().IsRegular() {
-					return nil
-				}
-				select {
-				case in <- path:
-				case <-ctx.Done():
-					return ctx.Err()
-				}
-
-				return nil
-			})
+			return walkFilesystem(ctx, root, in)
 		},
 		func() error {
 			for r := range out {
@@ -269,6 +259,26 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	)
 
 	return m, err
+}
+
+func walkFilesystem(ctx context.Context, root string, in chan<- string) error {
+	defer close(in)
+
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		select {
+		case in <- path:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+
+		return nil
+	})
 }
 
 func digest(ctx context.Context, path string) (*[md5.Size]byte, error) {
@@ -285,17 +295,6 @@ func digest(ctx context.Context, path string) (*[md5.Size]byte, error) {
 <td>
 
 ```go
-func main() {
-	m, err := MD5All(context.Background(), ".")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for k, sum := range m {
-		fmt.Printf("%s:\t%x\n", k, sum)
-	}
-}
-
 type result struct {
 	path string
 	sum  [md5.Size]byte

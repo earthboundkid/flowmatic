@@ -43,23 +43,7 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	// one for recording results from the digesters in a map
 	err := flowmatic.Do(
 		func() error {
-			defer close(in)
-
-			return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if !info.Mode().IsRegular() {
-					return nil
-				}
-				select {
-				case in <- path:
-				case <-ctx.Done():
-					return ctx.Err()
-				}
-
-				return nil
-			})
+			return walkFilesystem(ctx, root, in)
 		},
 		func() error {
 			for r := range out {
@@ -72,6 +56,26 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	)
 
 	return m, err
+}
+
+func walkFilesystem(ctx context.Context, root string, in chan<- string) error {
+	defer close(in)
+
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		select {
+		case in <- path:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+
+		return nil
+	})
 }
 
 func digest(ctx context.Context, path string) (*[md5.Size]byte, error) {

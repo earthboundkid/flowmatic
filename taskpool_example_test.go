@@ -32,24 +32,25 @@ func ExampleTaskPool() {
 // If the directory walk fails or any read operation fails,
 // MD5All returns an error.
 func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// Make a pool of 20 digesters
-	in, out := flowmatic.TaskPool(20, func(path string) (*[md5.Size]byte, error) {
-		return digest(ctx, path)
-	})
+	in, out := flowmatic.TaskPool(20, digest)
 
 	m := make(map[string][md5.Size]byte)
 	// Open two goroutines:
 	// one for reading file names by walking the filesystem
 	// one for recording results from the digesters in a map
 	err := flowmatic.Do(
-		func() error {
-			return walkFilesystem(ctx, root, in)
-		},
+		func() error { return walkFilesystem(ctx, root, in) },
 		func() error {
 			for r := range out {
-				if r.Out != nil {
-					m[r.In] = *r.Out
+				if r.Err != nil {
+					cancel()
+					return r.Err
 				}
+				m[r.In] = *r.Out
 			}
 			return nil
 		},
@@ -78,11 +79,11 @@ func walkFilesystem(ctx context.Context, root string, in chan<- string) error {
 	})
 }
 
-func digest(ctx context.Context, path string) (*[md5.Size]byte, error) {
+func digest(path string) (*[md5.Size]byte, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	hash := md5.Sum(data)
-	return &hash, ctx.Err()
+	return &hash, nil
 }

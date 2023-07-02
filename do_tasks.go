@@ -50,3 +50,39 @@ func DoTasks[Input, Output any](n int, task Task[Input, Output], manager Manager
 		}
 	}
 }
+
+// DoTasksLIFO is the same as DoTasks except tasks in the task queue are
+// evaluated in last in, first out order.
+func DoTasksLIFO[Input, Output any](n int, task Task[Input, Output], manager Manager[Input, Output], initial ...Input) {
+	in, out := start(n, task)
+	defer func() {
+		close(in)
+		// drain any waiting tasks
+		for range out {
+		}
+	}()
+	queue := deque.Of(initial...)
+	inflight := 0
+	for inflight > 0 || queue.Len() > 0 {
+		inch := in
+		item, ok := queue.Tail()
+		if !ok {
+			inch = nil
+		}
+		select {
+		case inch <- item:
+			inflight++
+			queue.PopTail()
+		case r := <-out:
+			inflight--
+			if r.Panic != nil {
+				panic(r.Panic)
+			}
+			items, ok := manager(r.In, r.Out, r.Err)
+			if !ok {
+				return
+			}
+			queue.Append(items...)
+		}
+	}
+}

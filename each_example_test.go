@@ -3,9 +3,11 @@ package flowmatic_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/carlmjohnson/flowmatic"
+	"golang.org/x/exp/slices"
 )
 
 func ExampleEach() {
@@ -69,4 +71,49 @@ func ExampleEach_cancel() {
 	// slept 100ms
 	// canceled
 	// exited promptly? true
+}
+
+func fakeSearch(_ context.Context, kind, query string) (string, error) {
+	return fmt.Sprintf("%s result for %q", kind, query), nil
+}
+
+func Google(ctx context.Context, query string) ([]string, error) {
+	searches := []string{"web", "image", "video"}
+	results := flowmatic.MakeSlice[string](len(searches))
+
+	task := func(kind string) error {
+		result, err := fakeSearch(ctx, kind, query)
+		if err != nil {
+			return err
+		}
+		results.Push(result)
+		return nil
+	}
+
+	err := flowmatic.Each(flowmatic.MaxProcs, searches, task)
+	if err != nil {
+		return nil, err
+	}
+	r := results.Slice()
+	slices.Sort(r)
+	return r, nil
+}
+
+func ExampleEach_slice() {
+	// Compare to https://pkg.go.dev/sync#example-WaitGroup
+	// and https://pkg.go.dev/golang.org/x/sync/errgroup#example-Group-Parallel
+	results, err := Google(context.Background(), "golang")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+
+	for _, result := range results {
+		fmt.Println(result)
+	}
+
+	// Output:
+	// image result for "golang"
+	// video result for "golang"
+	// web result for "golang"
 }

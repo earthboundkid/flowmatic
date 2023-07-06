@@ -1,14 +1,12 @@
 package flowmatic_test
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing/fstest"
-	"time"
 
 	"github.com/carlmjohnson/flowmatic"
 	"golang.org/x/exp/maps"
@@ -99,94 +97,4 @@ func ExampleManageTasks() {
 	// -  /c.html
 	// /c.html links to:
 	// -  /
-}
-
-func ExampleEach() {
-	times := []time.Duration{
-		50 * time.Millisecond,
-		100 * time.Millisecond,
-		200 * time.Millisecond,
-	}
-	start := time.Now()
-	err := flowmatic.Each(3, times, func(d time.Duration) error {
-		time.Sleep(d)
-		fmt.Println("slept", d)
-		return nil
-	})
-	if err != nil {
-		fmt.Println("error", err)
-	}
-	fmt.Println("executed concurrently?", time.Since(start) < 300*time.Millisecond)
-	// Output:
-	// slept 50ms
-	// slept 100ms
-	// slept 200ms
-	// executed concurrently? true
-}
-
-func ExampleDo() {
-	start := time.Now()
-	err := flowmatic.Do(
-		func() error {
-			time.Sleep(50 * time.Millisecond)
-			fmt.Println("hello")
-			return nil
-		}, func() error {
-			time.Sleep(100 * time.Millisecond)
-			fmt.Println("world")
-			return nil
-		}, func() error {
-			time.Sleep(200 * time.Millisecond)
-			fmt.Println("from flowmatic.Do")
-			return nil
-		})
-	if err != nil {
-		fmt.Println("error", err)
-	}
-	fmt.Println("executed concurrently?", time.Since(start) < 250*time.Millisecond)
-	// Output:
-	// hello
-	// world
-	// from flowmatic.Do
-	// executed concurrently? true
-}
-
-func ExampleEach_cancel() {
-	// To cancel execution early, communicate via a context.CancelFunc
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	times := []time.Duration{
-		50 * time.Millisecond,
-		100 * time.Millisecond,
-		300 * time.Millisecond,
-	}
-	task := func(d time.Duration) error {
-		// simulate doing some work with a context
-		t := time.NewTimer(d)
-		defer t.Stop()
-
-		select {
-		case <-t.C:
-			fmt.Println("slept", d)
-		case <-ctx.Done():
-			fmt.Println("canceled")
-		}
-
-		// if some condition applies, cancel the context for everyone
-		if d == 100*time.Millisecond {
-			cancel()
-		}
-		return nil
-	}
-	start := time.Now()
-	if err := flowmatic.Each(3, times, task); err != nil {
-		fmt.Println("error", err)
-	}
-	fmt.Println("exited promptly?", time.Since(start) < 150*time.Millisecond)
-	// Output:
-	// slept 50ms
-	// slept 100ms
-	// canceled
-	// exited promptly? true
 }

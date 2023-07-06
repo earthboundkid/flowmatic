@@ -16,7 +16,7 @@ func MakeSlice[T any](cap int) *Slice[T] {
 
 // Push appends v to s in a goroutine safe way.
 // Push panics if the user attempts to append to a slice
-// that has already been finalized by [Slice.Slice].
+// that has already been finalized by [Slice.Unwrap].
 func (s *Slice[T]) Push(v T) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -26,11 +26,11 @@ func (s *Slice[T]) Push(v T) {
 	s.s = append(s.s, v)
 }
 
-// Slice returns the slice underlying s.
+// Unwrap returns the slice underlying s.
 // It does not copy.
-// After a call to Slice,
+// After a call to Unwrap,
 // the user must not call Push again.
-func (s *Slice[T]) Slice() []T {
+func (s *Slice[T]) Unwrap() []T {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -52,7 +52,7 @@ func MakeMap[K comparable, V any](cap int) *Map[K, V] {
 
 // Add adds its key and value to Map.
 // Add panics if the user attempts to add to a map
-// that has already been finalized by [Map.Map].
+// that has already been finalized by [Map.Unwrap].
 func (m *Map[K, V]) Add(key K, value V) {
 	m.m.Lock()
 	defer m.m.Unlock()
@@ -66,11 +66,11 @@ func (m *Map[K, V]) Add(key K, value V) {
 	m.mm[key] = value
 }
 
-// Map returns the map underlying m.
+// Unwrap returns the map underlying m.
 // It does not copy.
-// After a call to Map,
+// After a call to Unwrap,
 // the user must not call Add again.
-func (m *Map[K, V]) Map() map[K]V {
+func (m *Map[K, V]) Unwrap() map[K]V {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.done = true

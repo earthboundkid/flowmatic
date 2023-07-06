@@ -235,9 +235,6 @@ func main() {
 // If the directory walk fails or any read operation fails,
 // MD5All returns an error.
 func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	// Make a pool of 20 digesters
 	in, out := flowmatic.TaskPool(20, digest)
 
@@ -245,12 +242,13 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	// Open two goroutines:
 	// one for reading file names by walking the filesystem
 	// one for recording results from the digesters in a map
-	err := flowmatic.Do(
-		func() error { return walkFilesystem(ctx, root, in) },
-		func() error {
+	err := flowmatic.All(ctx,
+		func(ctx context.Context) error {
+			return walkFilesystem(ctx, root, in)
+		},
+		func(ctx context.Context) error {
 			for r := range out {
 				if r.Err != nil {
-					cancel()
 					return r.Err
 				}
 				m[r.In] = *r.Out

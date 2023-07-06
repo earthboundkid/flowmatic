@@ -8,7 +8,7 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
-func ExampleAll() {
+func ExampleDoAll() {
 	sleepFor := func(d time.Duration) func(context.Context) error {
 		return func(ctx context.Context) error {
 			timer := time.NewTimer(d)
@@ -16,24 +16,26 @@ func ExampleAll() {
 			select {
 			case <-timer.C:
 				fmt.Println("timer:", d)
-				return nil
+				return fmt.Errorf("abort!")
 			case <-ctx.Done():
 				fmt.Println("cancelled")
-				return ctx.Err()
+				return nil
 			}
 		}
 	}
 	ctx := context.Background()
 	start := time.Now()
-	err := flowmatic.All(ctx,
+	err := flowmatic.DoAll(ctx,
+		sleepFor(1*time.Millisecond),
+		sleepFor(10*time.Millisecond),
 		sleepFor(100*time.Millisecond),
-		sleepFor(200*time.Millisecond),
-		sleepFor(300*time.Millisecond),
 	)
-	fmt.Println(err, time.Since(start).Round(100*time.Millisecond))
+	fmt.Println("err:", err)
+	fmt.Println("duration:", time.Since(start).Round(time.Second))
 	// Output:
-	// timer: 100ms
-	// timer: 200ms
-	// timer: 300ms
-	// <nil> 300ms
+	// timer: 1ms
+	// cancelled
+	// cancelled
+	// err: abort!
+	// duration: 0s
 }

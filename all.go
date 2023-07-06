@@ -6,16 +6,16 @@ import (
 	"sync"
 )
 
-// All runs fns in concurrently
+// DoAll runs fns in concurrently
 // and waits for them all to finish.
 // Each function receives a child context
 // which is cancelled once one function returns an error or panics.
-// All returns nil if all functions succeed.
+// DoAll returns nil if all functions succeed.
 // Otherwise,
-// All returns a multierror containing the errors encountered.
+// DoAll returns a multierror containing the errors encountered.
 // If a function panics during execution,
 // a panic will be caught and rethrown in the parent Goroutine.
-func All(ctx context.Context, fns ...func(context.Context) error) error {
+func DoAll(ctx context.Context, fns ...func(context.Context) error) error {
 	type result struct {
 		err   error
 		panic any

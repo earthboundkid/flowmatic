@@ -1,6 +1,7 @@
 package flowmatic_test
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
 	"testing"
@@ -86,6 +87,72 @@ func TestDo_panic(t *testing.T) {
 				panic("boom")
 			},
 			func() error {
+				n.Add(1)
+				return nil
+			})
+	})
+	if err != nil {
+		t.Fatal("should have panicked")
+	}
+	if r == nil {
+		t.Fatal("should have panicked")
+	}
+	if r != "boom" {
+		t.Fatal(r)
+	}
+	if n.Load() != 2 {
+		t.Fatal(n.Load())
+	}
+}
+
+func TestRace_panic(t *testing.T) {
+	var (
+		n   atomic.Int64
+		err error
+	)
+	r := try(func() {
+		err = flowmatic.Race(context.Background(),
+			func(context.Context) error {
+				n.Add(1)
+				return nil
+			},
+			func(context.Context) error {
+				panic("boom")
+			},
+			func(context.Context) error {
+				n.Add(1)
+				return nil
+			})
+	})
+	if err != nil {
+		t.Fatal("should have panicked")
+	}
+	if r == nil {
+		t.Fatal("should have panicked")
+	}
+	if r != "boom" {
+		t.Fatal(r)
+	}
+	if n.Load() != 2 {
+		t.Fatal(n.Load())
+	}
+}
+
+func TestAll_panic(t *testing.T) {
+	var (
+		n   atomic.Int64
+		err error
+	)
+	r := try(func() {
+		err = flowmatic.All(context.Background(),
+			func(context.Context) error {
+				n.Add(1)
+				return nil
+			},
+			func(context.Context) error {
+				panic("boom")
+			},
+			func(context.Context) error {
 				n.Add(1)
 				return nil
 			})

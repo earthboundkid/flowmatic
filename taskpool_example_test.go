@@ -39,7 +39,7 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	// Open two goroutines:
 	// one for reading file names by walking the filesystem
 	// one for recording results from the digesters in a map
-	err := flowmatic.All(ctx,
+	err := flowmatic.DoAll(ctx,
 		func(ctx context.Context) error {
 			return walkFilesystem(ctx, root, in)
 		},

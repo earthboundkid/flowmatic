@@ -5,7 +5,7 @@
 
 Flowmatic is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
 
-Flowmatic has a easy to use API consisting of four functions: `Do`, `Each`, `ManageTasks`, and `TaskPool`. It automatically handles spawning workers, collecting errors, and propagating panics.
+Flowmatic has a easy to use API with functions for handling common concurrency patterns. It automatically handles spawning workers, collecting errors, and propagating panics.
 
 Flowmatic requires Go 1.20+.
 
@@ -81,6 +81,33 @@ err := errors.Join(errs...)
 </tr>
 </table>
 
+To create a context for tasks that is closed on the first error,
+use `flowmatic.DoAll`.
+To create a context for tasks that is closed on the first success,
+use `flowmatic.DoRace`.
+
+```go
+// Make variables to hold responses
+var pageA, pageB, pageC string
+// Race the requests to see who can answer first
+err := flowmatic.DoRace(ctx,
+	func(ctx context.Context) error {
+		var err error
+		pageA, err = request(ctx, "A")
+		return err
+	},
+	func(ctx context.Context) error {
+		var err error
+		pageB, err = request(ctx, "B")
+		return err
+	},
+	func(ctx context.Context) error {
+		var err error
+		pageC, err = request(ctx, "C")
+		return err
+	},
+)
+```
 
 ### Execute homogenous tasks
 `flowmatic.Each` is useful if you need to execute the same task on each item in a slice using a worker pool:
@@ -242,7 +269,7 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	// Open two goroutines:
 	// one for reading file names by walking the filesystem
 	// one for recording results from the digesters in a map
-	err := flowmatic.All(ctx,
+	err := flowmatic.DoAll(ctx,
 		func(ctx context.Context) error {
 			return walkFilesystem(ctx, root, in)
 		},

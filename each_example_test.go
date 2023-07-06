@@ -94,7 +94,7 @@ func Google(ctx context.Context, query string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := results.Slice()
+	r := results.Unwrap()
 	slices.Sort(r)
 	return r, nil
 }

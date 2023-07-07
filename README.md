@@ -5,7 +5,7 @@
 
 Flowmatic is a generic Go library that provides a [structured approach](https://vorpus.org/blog/notes-on-structured-concurrency-or-go-statement-considered-harmful/) to concurrent programming. It lets you easily manage concurrent tasks in a manner that is simple, yet effective and flexible.
 
-Flowmatic has a easy to use API with functions for handling common concurrency patterns. It automatically handles spawning workers, collecting errors, and propagating panics.
+Flowmatic has an easy to use API with functions for handling common concurrency patterns. It automatically handles spawning workers, collecting errors, and propagating panics.
 
 Flowmatic requires Go 1.20+.
 

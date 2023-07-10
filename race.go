@@ -6,17 +6,17 @@ import (
 	"sync"
 )
 
-// DoRace runs fns in concurrently
+// DoContextRace runs fns in concurrently
 // and waits for them all to finish.
 // Each function receives a child context
 // which is cancelled once one function has successfully completed or panicked.
-// DoRace returns nil
+// DoContextRace returns nil
 // if at least one function completes without an error.
 // If all functions return an error,
-// DoRace returns a multierror containing all the errors.
+// DoContextRace returns a multierror containing all the errors.
 // If a function panics during execution,
 // a panic will be caught and rethrown in the parent Goroutine.
-func DoRace(ctx context.Context, fns ...func(context.Context) error) error {
+func DoContextRace(ctx context.Context, fns ...func(context.Context) error) error {
 	type result struct {
 		err   error
 		panic any

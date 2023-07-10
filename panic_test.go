@@ -111,7 +111,7 @@ func TestRace_panic(t *testing.T) {
 		err error
 	)
 	r := try(func() {
-		err = flowmatic.DoRace(context.Background(),
+		err = flowmatic.DoContextRace(context.Background(),
 			func(context.Context) error {
 				n.Add(1)
 				return nil
@@ -144,7 +144,7 @@ func TestAll_panic(t *testing.T) {
 		err error
 	)
 	r := try(func() {
-		err = flowmatic.DoAll(context.Background(),
+		err = flowmatic.DoContext(context.Background(),
 			func(context.Context) error {
 				n.Add(1)
 				return nil

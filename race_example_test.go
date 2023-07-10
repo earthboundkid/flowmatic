@@ -8,7 +8,7 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
-func ExampleDoRace() {
+func ExampleDoContextRace() {
 	sleepFor := func(d time.Duration) func(context.Context) error {
 		return func(ctx context.Context) error {
 			timer := time.NewTimer(d)
@@ -25,7 +25,7 @@ func ExampleDoRace() {
 	}
 	ctx := context.Background()
 	start := time.Now()
-	err := flowmatic.DoRace(ctx,
+	err := flowmatic.DoContextRace(ctx,
 		sleepFor(1*time.Millisecond),
 		sleepFor(1*time.Second),
 		sleepFor(1*time.Minute),
@@ -40,7 +40,7 @@ func ExampleDoRace() {
 	// duration: 0s
 }
 
-func ExampleDoRace_fakeRequest() {
+func ExampleDoContextRace_fakeRequest() {
 	// Cancellable sleep helper
 	sleepFor := func(ctx context.Context, d time.Duration) bool {
 		timer := time.NewTimer(d)
@@ -73,7 +73,7 @@ func ExampleDoRace_fakeRequest() {
 	// Make variables to hold responses
 	var pageA, pageB, pageC string
 	// Race the requests to see who can answer first
-	err := flowmatic.DoRace(ctx,
+	err := flowmatic.DoContextRace(ctx,
 		func(ctx context.Context) error {
 			var err error
 			pageA, err = request(ctx, "A")

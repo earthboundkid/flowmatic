@@ -82,15 +82,15 @@ err := errors.Join(errs...)
 </table>
 
 To create a context for tasks that is closed on the first error,
-use `flowmatic.DoAll`.
+use `flowmatic.DoContext`.
 To create a context for tasks that is closed on the first success,
-use `flowmatic.DoRace`.
+use `flowmatic.DoContextRace`.
 
 ```go
 // Make variables to hold responses
 var pageA, pageB, pageC string
 // Race the requests to see who can answer first
-err := flowmatic.DoRace(ctx,
+err := flowmatic.DoContext(ctx,
 	func(ctx context.Context) error {
 		var err error
 		pageA, err = request(ctx, "A")
@@ -269,7 +269,7 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 	// Open two goroutines:
 	// one for reading file names by walking the filesystem
 	// one for recording results from the digesters in a map
-	err := flowmatic.DoAll(ctx,
+	err := flowmatic.DoContext(ctx,
 		func(ctx context.Context) error {
 			return walkFilesystem(ctx, root, in)
 		},

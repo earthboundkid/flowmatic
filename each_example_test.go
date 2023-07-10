@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/carlmjohnson/flowmatic"
+	"github.com/carlmjohnson/flowmatic/flowsafe"
 	"golang.org/x/exp/slices"
 )
 
@@ -79,7 +80,7 @@ func fakeSearch(_ context.Context, kind, query string) (string, error) {
 
 func Google(ctx context.Context, query string) ([]string, error) {
 	searches := []string{"web", "image", "video"}
-	results := flowmatic.MakeSlice[string](len(searches))
+	results := flowsafe.MakeSlice[string](len(searches))
 
 	task := func(kind string) error {
 		result, err := fakeSearch(ctx, kind, query)

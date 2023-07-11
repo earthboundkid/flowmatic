@@ -8,27 +8,35 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
+// sleepFor is a cancellable sleep
+func sleepFor(ctx context.Context, d time.Duration) bool {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
 func ExampleDoContextRace() {
-	sleepFor := func(d time.Duration) func(context.Context) error {
+	task := func(d time.Duration) func(context.Context) error {
 		return func(ctx context.Context) error {
-			timer := time.NewTimer(d)
-			defer timer.Stop()
-			select {
-			case <-timer.C:
+			if sleepFor(ctx, d) {
 				fmt.Println("timer:", d)
 				return nil
-			case <-ctx.Done():
-				fmt.Println("cancelled")
-				return ctx.Err()
 			}
+			fmt.Println("cancelled")
+			return ctx.Err()
 		}
 	}
 	ctx := context.Background()
 	start := time.Now()
 	err := flowmatic.DoContextRace(ctx,
-		sleepFor(1*time.Millisecond),
-		sleepFor(1*time.Second),
-		sleepFor(1*time.Minute),
+		task(1*time.Millisecond),
+		task(1*time.Second),
+		task(1*time.Minute),
 	)
 	fmt.Println("err:", err)
 	fmt.Println("duration:", time.Since(start).Round(time.Second))
@@ -41,18 +49,6 @@ func ExampleDoContextRace() {
 }
 
 func ExampleDoContextRace_fakeRequest() {
-	// Cancellable sleep helper
-	sleepFor := func(ctx context.Context, d time.Duration) bool {
-		timer := time.NewTimer(d)
-		defer timer.Stop()
-		select {
-		case <-timer.C:
-			return true
-		case <-ctx.Done():
-			return false
-		}
-	}
-
 	// Setup fake requests
 	request := func(ctx context.Context, page string) (string, error) {
 		var sleepLength time.Duration

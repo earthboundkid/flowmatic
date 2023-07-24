@@ -12,11 +12,11 @@ func ExampleMap() {
 	// Add to a map in concurrent goroutines
 	err := flowmatic.Do(
 		func() error {
-			safemap.Add("a", 42)
+			safemap.Store("a", 42)
 			return nil
 		},
 		func() error {
-			safemap.Add("b", 0x42)
+			safemap.Store("b", 0x42)
 			return nil
 		},
 	)

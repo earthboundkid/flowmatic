@@ -72,6 +72,37 @@ func TestEach_panic(t *testing.T) {
 	}
 }
 
+func TestEachN_panic(t *testing.T) {
+	var (
+		n   atomic.Int64
+		err error
+	)
+	input := []int64{1, 2, 3}
+	r := try(func() {
+		err = flowmatic.EachN(1, len(input),
+			func(pos int) error {
+				delta := input[pos]
+				if delta == 2 {
+					panic("boom")
+				}
+				n.Add(delta)
+				return nil
+			})
+	})
+	if err != nil {
+		t.Fatal("should have panicked")
+	}
+	if r == nil {
+		t.Fatal("should have panicked")
+	}
+	if r != "boom" {
+		t.Fatal(r)
+	}
+	if n.Load() != 4 {
+		t.Fatal(n.Load())
+	}
+}
+
 func TestDo_panic(t *testing.T) {
 	var (
 		n   atomic.Int64

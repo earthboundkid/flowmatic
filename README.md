@@ -169,6 +169,33 @@ err := errors.Join(collectedErrs...)
 </tr>
 </table>
 
+Use `flowmatic.EachN` to start tasks for numbers 0 through N.
+
+```go
+// Start with some slice of input work
+input := []string{"1", "42", "867-5309", "1337"}
+// Create a placeholder for output
+output := make([]int, len(input))
+
+// Concurrently process input[0..N] and slot into output
+err := flowmatic.EachN(flowmatic.MaxProcs, len(input),
+	func(pos int) error {
+		n, err := strconv.Atoi(input[pos])
+		if err != nil {
+			return err
+		}
+		// This is goroutine safe because each task has a different pos
+		output[pos] = n
+		return nil
+	})
+if err != nil {
+	// Couldn't process Jenny's number
+	fmt.Println(err) // strconv.Atoi: parsing "867-5309": invalid syntax
+}
+// Other values were processed
+fmt.Println(output) // [1 42 0 1337]
+```
+
 ### Manage tasks that spawn new tasks
 For tasks that may create more work, use `flowmatic.ManageTasks`.
 Create a manager that will be serially executed,

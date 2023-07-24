@@ -3,7 +3,7 @@ package flowmatic
 import (
 	"context"
 	"errors"
-	"sync"
+	"sync/atomic"
 )
 
 // DoContextRace runs fns in concurrently
@@ -17,53 +17,28 @@ import (
 // If a function panics during execution,
 // a panic will be caught and rethrown in the parent Goroutine.
 func DoContextRace(ctx context.Context, fns ...func(context.Context) error) error {
-	type result struct {
-		err   error
-		panic any
-	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
-	var wg sync.WaitGroup
-	errch := make(chan result, len(fns))
-
-	wg.Add(len(fns))
-	for i := range fns {
-		fn := fns[i]
-		go func() {
-			defer wg.Done()
-			defer func() {
-				if panicVal := recover(); panicVal != nil {
-					errch <- result{panic: panicVal}
-				}
-			}()
-			errch <- result{err: fn(ctx)}
+	errs := make([]error, len(fns))
+	var success atomic.Bool
+	_ = EachN(len(fns), len(fns), func(pos int) error {
+		defer func() {
+			panicVal := recover()
+			if panicVal != nil {
+				cancel()
+				panic(panicVal)
+			}
 		}()
-	}
-	go func() {
-		wg.Wait()
-		close(errch)
-	}()
-
-	ok := false
-	var panicVal any
-	errs := make([]error, 0, len(fns))
-	for res := range errch {
-		switch {
-		case res.err == nil && res.panic == nil:
-			cancel()
-			ok = true
-		case res.panic != nil:
-			cancel()
-			panicVal = res.panic
-		case res.err != nil:
-			errs = append(errs, res.err)
+		err := fns[pos](ctx)
+		if err != nil {
+			errs[pos] = err
+			return nil
 		}
-	}
-	if panicVal != nil {
-		panic(panicVal)
-	}
-	if ok {
+		cancel()
+		success.Store(true)
+		return nil
+	})
+	if success.Load() {
 		return nil
 	}
 	return errors.Join(errs...)

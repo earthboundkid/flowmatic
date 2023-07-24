@@ -16,7 +16,7 @@ func TestSlice_panic(t *testing.T) {
 			r = recover()
 		}()
 
-		safeslice.Push("a")
+		safeslice.Store("a")
 	}()
 	if r == nil {
 		t.Fatal("expected panic for Add after Unwrap")
@@ -25,7 +25,7 @@ func TestSlice_panic(t *testing.T) {
 
 func TestSlice_make(t *testing.T) {
 	safeslice := flowsafe.MakeSlice[string](2)
-	safeslice.Push("foo")
+	safeslice.Store("foo")
 	s := safeslice.Unwrap()
 	if len(s) != 1 {
 		t.Fatalf("expected len 1; got %v", len(s))

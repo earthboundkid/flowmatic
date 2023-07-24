@@ -14,10 +14,10 @@ func MakeSlice[T any](cap int) *Slice[T] {
 	return &Slice[T]{s: make([]T, 0, cap)}
 }
 
-// Push appends v to s in a goroutine safe way.
-// Push panics if the user attempts to append to a slice
+// Store appends v to s in a goroutine safe way.
+// Store panics if the user attempts to append to a slice
 // that has already been finalized by [Slice.Unwrap].
-func (s *Slice[T]) Push(v T) {
+func (s *Slice[T]) Store(v T) {
 	s.l.Lock()
 	defer s.l.Unlock()
 	if s.done {
@@ -29,7 +29,7 @@ func (s *Slice[T]) Push(v T) {
 // Unwrap returns the slice underlying s.
 // It does not copy.
 // After a call to Unwrap,
-// the user must not call Push again.
+// the user must not call Store again.
 func (s *Slice[T]) Unwrap() []T {
 	s.l.Lock()
 	defer s.l.Unlock()

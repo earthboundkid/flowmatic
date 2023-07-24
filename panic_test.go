@@ -105,7 +105,7 @@ func TestDo_panic(t *testing.T) {
 	}
 }
 
-func TestRace_panic(t *testing.T) {
+func TestDoContextRace_panic(t *testing.T) {
 	var (
 		n   atomic.Int64
 		err error
@@ -138,7 +138,7 @@ func TestRace_panic(t *testing.T) {
 	}
 }
 
-func TestAll_panic(t *testing.T) {
+func TestDoContext_panic(t *testing.T) {
 	var (
 		n   atomic.Int64
 		err error

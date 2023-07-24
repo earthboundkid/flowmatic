@@ -88,7 +88,7 @@ func Google(ctx context.Context, query string) ([]string, error) {
 		if err != nil {
 			return err
 		}
-		results.Push(result)
+		results.Store(result)
 		return nil
 	}
 

@@ -33,7 +33,7 @@ func (m *Map[K, V]) Store(key K, value V) {
 // Unwrap returns the map underlying m.
 // It does not copy.
 // After a call to Unwrap,
-// the user must not call Add again.
+// the user must not call Store again.
 func (m *Map[K, V]) Unwrap() map[K]V {
 	m.l.Lock()
 	defer m.l.Unlock()

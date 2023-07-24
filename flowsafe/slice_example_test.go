@@ -13,11 +13,11 @@ func ExampleSlice() {
 	// Push items to the slice in concurrent goroutines
 	err := flowmatic.Do(
 		func() error {
-			safeslice.Push("a")
+			safeslice.Store("a")
 			return nil
 		},
 		func() error {
-			safeslice.Push("b")
+			safeslice.Store("b")
 			return nil
 		},
 	)

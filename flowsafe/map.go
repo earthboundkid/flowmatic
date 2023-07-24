@@ -14,10 +14,10 @@ func MakeMap[K comparable, V any](cap int) *Map[K, V] {
 	return &Map[K, V]{m: make(map[K]V, cap)}
 }
 
-// Add adds its key and value to Map.
-// Add panics if the user attempts to add to a map
+// Store adds its key and value to Map.
+// Store panics if the user attempts to add to a map
 // that has already been finalized by [Map.Unwrap].
-func (m *Map[K, V]) Add(key K, value V) {
+func (m *Map[K, V]) Store(key K, value V) {
 	m.l.Lock()
 	defer m.l.Unlock()
 

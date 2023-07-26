@@ -81,9 +81,9 @@ err := errors.Join(errs...)
 </tr>
 </table>
 
-To create a context for tasks that is closed on the first error,
+To create a context for tasks that is cancelled on the first error,
 use `flowmatic.DoContext`.
-To create a context for tasks that is closed on the first success,
+To create a context for tasks that is cancelled on the first success,
 use `flowmatic.DoContextRace`.
 
 ```go

@@ -9,6 +9,16 @@ Flowmatic has an easy to use API with functions for handling common concurrency 
 
 Flowmatic requires Go 1.20+.
 
+## Features
+
+- Has a simple API that improves readability over channels/waitgroups/mutexes
+- Handles a variety of concurrency problems such as heterogenous task groups, homogenous execution of a task over a slice, and dynamic work spawning
+- Aggregates errors
+- Properly propagates panics across goroutine boundaries
+- Has helpers for context cancellation
+- Has easy-to-use, goroutine-safe data structures
+- Few dependencies
+
 ## How to use Flowmatic
 
 ### Execute heterogenous tasks

@@ -17,7 +17,7 @@ func DoContext(ctx context.Context, fns ...func(context.Context) error) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	return EachN(len(fns), len(fns), func(pos int) error {
+	return eachN(len(fns), len(fns), func(pos int) error {
 		defer func() {
 			panicVal := recover()
 			if panicVal != nil {

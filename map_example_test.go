@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/carlmjohnson/flowmatic"
 )
@@ -48,4 +49,27 @@ func ExampleMap() {
 	// web result for "golang"
 	// image result for "golang"
 	// video result for "golang"
+}
+
+func ExampleMap_simple() {
+	ctx := context.Background()
+
+	// Start with some slice of input work
+	input := []string{"0", "1", "42", "1337"}
+	// Have a task that takes a context
+	decodeAndDouble := func(_ context.Context, s string) (int, error) {
+		n, err := strconv.Atoi(s)
+		if err != nil {
+			return 0, err
+		}
+		return 2 * n, nil
+	}
+	// Concurrently process input into output
+	output, err := flowmatic.Map(ctx, flowmatic.MaxProcs, input, decodeAndDouble)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(output)
+	// Output:
+	// [0 2 84 2674]
 }

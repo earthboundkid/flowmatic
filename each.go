@@ -11,18 +11,18 @@ import (
 // If a task panics during execution,
 // the panic will be caught and rethrown in the parent Goroutine.
 func Each[Input any](numWorkers int, items []Input, task func(Input) error) error {
-	return EachN(numWorkers, len(items), func(pos int) error {
+	return eachN(numWorkers, len(items), func(pos int) error {
 		return task(items[pos])
 	})
 }
 
-// EachN starts numWorkers concurrent workers (or GOMAXPROCS workers if numWorkers < 1)
+// eachN starts numWorkers concurrent workers (or GOMAXPROCS workers if numWorkers < 1)
 // and starts a task for each number from 0 to numItems.
 // Errors returned by a task do not halt execution,
 // but are joined into a multierror return value.
 // If a task panics during execution,
 // the panic will be caught and rethrown in the parent Goroutine.
-func EachN(numWorkers, numItems int, task func(int) error) error {
+func eachN(numWorkers, numItems int, task func(int) error) error {
 	type void struct{}
 	inch, ouch := TaskPool(numWorkers, func(pos int) (void, error) {
 		return void{}, task(pos)

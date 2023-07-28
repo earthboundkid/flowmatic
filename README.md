@@ -178,31 +178,23 @@ err := errors.Join(collectedErrs...)
 </tr>
 </table>
 
-Use `flowmatic.EachN` to start tasks for numbers 0 through N.
+Use `flowmatic.Map` to map an input slice to an output slice.
 
 ```go
 // Start with some slice of input work
-input := []string{"1", "42", "867-5309", "1337"}
-// Create a placeholder for output
-output := make([]int, len(input))
-
-// Concurrently process input[0..N] and slot into output
-err := flowmatic.EachN(flowmatic.MaxProcs, len(input),
-	func(pos int) error {
-		n, err := strconv.Atoi(input[pos])
-		if err != nil {
-			return err
-		}
-		// This is goroutine safe because each task has a different pos
-		output[pos] = n
-		return nil
-	})
-if err != nil {
-	// Couldn't process Jenny's number
-	fmt.Println(err) // strconv.Atoi: parsing "867-5309": invalid syntax
+input := []string{"0", "1", "42", "1337"}
+// Have a task that takes a context
+decodeAndDouble := func(_ context.Context, s string) (int, error) {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, err
+	}
+	return 2 * n, nil
 }
-// Other values were processed
-fmt.Println(output) // [1 42 0 1337]
+// Concurrently process input into output
+output, err := flowmatic.Map(ctx, flowmatic.MaxProcs, input, decodeAndDouble)
+// output == []int{0, 2, 84, 2674}
+// err == nil
 ```
 
 ### Manage tasks that spawn new tasks

@@ -16,7 +16,6 @@ Flowmatic requires Go 1.20+.
 - Aggregates errors
 - Properly propagates panics across goroutine boundaries
 - Has helpers for context cancellation
-- Has easy-to-use, goroutine-safe data structures
 - Few dependencies
 
 ## How to use Flowmatic

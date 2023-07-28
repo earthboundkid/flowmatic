@@ -21,7 +21,7 @@ func DoContextRace(ctx context.Context, fns ...func(context.Context) error) erro
 	defer cancel()
 	errs := make([]error, len(fns))
 	var success atomic.Bool
-	_ = EachN(len(fns), len(fns), func(pos int) error {
+	_ = eachN(len(fns), len(fns), func(pos int) error {
 		defer func() {
 			panicVal := recover()
 			if panicVal != nil {

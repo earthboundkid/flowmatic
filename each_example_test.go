@@ -89,20 +89,10 @@ func fakeSearch(kind string) Search {
 }
 
 func Google(ctx context.Context, query string) ([]Result, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	searches := []Search{Web, Image, Video}
-	results := make([]Result, len(searches))
-	err := flowmatic.EachN(flowmatic.MaxProcs, len(searches),
-		func(pos int) error {
-			result, err := searches[pos](ctx, query)
-			if err != nil {
-				cancel()
-				return err
-			}
-			results[pos] = result
-			return nil
+	results, err := flowmatic.EachMap(flowmatic.MaxProcs, ctx, searches,
+		func(ctx context.Context, search Search) (Result, error) {
+			return search(ctx, query)
 		})
 	if err != nil {
 		return nil, err
@@ -110,7 +100,7 @@ func Google(ctx context.Context, query string) ([]Result, error) {
 	return results, nil
 }
 
-func ExampleEachN_slice() {
+func ExampleEachMap() {
 	// Compare to https://pkg.go.dev/golang.org/x/sync/errgroup#example-Group-Parallel
 	// and https://pkg.go.dev/sync#example-WaitGroup
 	results, err := Google(context.Background(), "golang")

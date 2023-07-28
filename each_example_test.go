@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/carlmjohnson/flowmatic"
-	"github.com/carlmjohnson/flowmatic/flowsafe"
-	"golang.org/x/exp/slices"
 )
 
 func ExampleEach() {
@@ -75,35 +73,46 @@ func ExampleEach_cancel() {
 	// exited promptly? true
 }
 
-func fakeSearch(_ context.Context, kind, query string) (string, error) {
-	return fmt.Sprintf("%s result for %q", kind, query), nil
+var (
+	Web   = fakeSearch("web")
+	Image = fakeSearch("image")
+	Video = fakeSearch("video")
+)
+
+type Result string
+type Search func(ctx context.Context, query string) (Result, error)
+
+func fakeSearch(kind string) Search {
+	return func(_ context.Context, query string) (Result, error) {
+		return Result(fmt.Sprintf("%s result for %q", kind, query)), nil
+	}
 }
 
-func Google(ctx context.Context, query string) ([]string, error) {
-	searches := []string{"web", "image", "video"}
-	results := flowsafe.MakeSlice[string](len(searches))
+func Google(ctx context.Context, query string) ([]Result, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-	task := func(kind string) error {
-		result, err := fakeSearch(ctx, kind, query)
-		if err != nil {
-			return err
-		}
-		results.Store(result)
-		return nil
-	}
-
-	err := flowmatic.Each(flowmatic.MaxProcs, searches, task)
+	searches := []Search{Web, Image, Video}
+	results := make([]Result, len(searches))
+	err := flowmatic.EachN(flowmatic.MaxProcs, len(searches),
+		func(pos int) error {
+			result, err := searches[pos](ctx, query)
+			if err != nil {
+				cancel()
+				return err
+			}
+			results[pos] = result
+			return nil
+		})
 	if err != nil {
 		return nil, err
 	}
-	r := results.Unwrap()
-	slices.Sort(r)
-	return r, nil
+	return results, nil
 }
 
-func ExampleEach_slice() {
-	// Compare to https://pkg.go.dev/sync#example-WaitGroup
-	// and https://pkg.go.dev/golang.org/x/sync/errgroup#example-Group-Parallel
+func ExampleEachN_slice() {
+	// Compare to https://pkg.go.dev/golang.org/x/sync/errgroup#example-Group-Parallel
+	// and https://pkg.go.dev/sync#example-WaitGroup
 	results, err := Google(context.Background(), "golang")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -115,9 +124,9 @@ func ExampleEach_slice() {
 	}
 
 	// Output:
+	// web result for "golang"
 	// image result for "golang"
 	// video result for "golang"
-	// web result for "golang"
 }
 
 func ExampleEachN() {

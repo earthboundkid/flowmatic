@@ -17,6 +17,7 @@ Flowmatic requires Go 1.20+.
 - Properly propagates panics across goroutine boundaries
 - Has helpers for context cancellation
 - Few dependencies
+- Good test coverage
 
 ## How to use Flowmatic
 

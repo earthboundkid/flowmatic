@@ -9,6 +9,17 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
+func sleepFor(ctx context.Context, d time.Duration) bool {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
 func TestRace_join_errs(t *testing.T) {
 	var (
 		a = errors.New("a")

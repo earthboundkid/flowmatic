@@ -181,22 +181,69 @@ err := errors.Join(collectedErrs...)
 
 Use `flowmatic.Map` to map an input slice to an output slice.
 
+<table>
+<tr>
+<td colspan="2">
+
 ```go
-// Start with some slice of input work
-input := []string{"0", "1", "42", "1337"}
-// Have a task that takes a context
-decodeAndDouble := func(_ context.Context, s string) (int, error) {
-	n, err := strconv.Atoi(s)
+func main() {
+	results, err := Google(context.Background(), "golang")
 	if err != nil {
-		return 0, err
+		fmt.Fprintln(os.Stderr, err)
+		return
 	}
-	return 2 * n, nil
+	for _, result := range results {
+		fmt.Println(result)
+	}
 }
-// Concurrently process input into output
-output, err := flowmatic.Map(ctx, flowmatic.MaxProcs, input, decodeAndDouble)
-// output == []int{0, 2, 84, 2674}
-// err == nil
 ```
+
+</td></tr>
+<tr>
+<th><code>flowmatic</code></th>
+<th><a href="https://pkg.go.dev/golang.org/x/sync/errgroup#example-Group-Parallel"><code>x/sync/errgroup</code></a></th>
+</tr>
+<tr><td>
+
+```go
+func Google(ctx context.Context, query string) ([]Result, error) {
+	searches := []Search{Web, Image, Video}
+	return flowmatic.Map(ctx, flowmatic.MaxProcs, searches,
+		func(ctx context.Context, search Search) (Result, error) {
+			return search(ctx, query)
+		})
+}
+```
+
+
+</td>
+<td>
+
+```go
+func Google(ctx context.Context, query string) ([]Result, error) {
+	g, ctx := errgroup.WithContext(ctx)
+
+	searches := []Search{Web, Image, Video}
+	results := make([]Result, len(searches))
+	for i, search := range searches {
+		i, search := i, search // https://golang.org/doc/faq#closures_and_goroutines
+		g.Go(func() error {
+			result, err := search(ctx, query)
+			if err == nil {
+				results[i] = result
+			}
+			return err
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+```
+
+</td>
+</table>
 
 ### Manage tasks that spawn new tasks
 For tasks that may create more work, use `flowmatic.ManageTasks`.

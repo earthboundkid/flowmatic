@@ -8,44 +8,34 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
-// sleepFor is a cancellable sleep
-func sleepFor(ctx context.Context, d time.Duration) bool {
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-	select {
-	case <-timer.C:
-		return true
-	case <-ctx.Done():
-		return false
-	}
-}
-
 func ExampleRace() {
 	task := func(d time.Duration) func(context.Context) error {
 		return func(ctx context.Context) error {
-			if sleepFor(ctx, d) {
-				fmt.Println("timer:", d)
-				return nil
+			// sleepFor is a cancellable time.Sleep
+			if !sleepFor(ctx, d) {
+				fmt.Println("canceled")
+				return ctx.Err()
 			}
-			fmt.Println("cancelled")
-			return ctx.Err()
+			fmt.Println("slept for", d)
+			return nil
 		}
 	}
 	ctx := context.Background()
 	start := time.Now()
 	err := flowmatic.Race(ctx,
 		task(1*time.Millisecond),
-		task(1*time.Second),
-		task(1*time.Minute),
+		task(10*time.Millisecond),
+		task(100*time.Millisecond),
 	)
+	// Err is nil as long as one task succeeds
 	fmt.Println("err:", err)
-	fmt.Println("duration:", time.Since(start).Round(time.Second))
+	fmt.Println("exited early?", time.Since(start) < 10*time.Millisecond)
 	// Output:
-	// timer: 1ms
-	// cancelled
-	// cancelled
+	// slept for 1ms
+	// canceled
+	// canceled
 	// err: <nil>
-	// duration: 0s
+	// exited early? true
 }
 
 func ExampleRace_fakeRequest() {

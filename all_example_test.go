@@ -11,12 +11,13 @@ import (
 func ExampleAll() {
 	task := func(d time.Duration) func(context.Context) error {
 		return func(ctx context.Context) error {
-			if sleepFor(ctx, d) {
-				fmt.Println("timer:", d)
-				return fmt.Errorf("abort!")
+			// sleepFor is a cancellable time.Sleep
+			if !sleepFor(ctx, d) {
+				fmt.Println("cancelled")
+				return nil
 			}
-			fmt.Println("cancelled")
-			return nil
+			fmt.Println("slept for", d)
+			return fmt.Errorf("abort after %v", d)
 		}
 	}
 	ctx := context.Background()
@@ -27,11 +28,11 @@ func ExampleAll() {
 		task(100*time.Millisecond),
 	)
 	fmt.Println("err:", err)
-	fmt.Println("duration:", time.Since(start).Round(time.Second))
+	fmt.Println("exited early?", time.Since(start) < 10*time.Millisecond)
 	// Output:
-	// timer: 1ms
+	// slept for 1ms
 	// cancelled
 	// cancelled
-	// err: abort!
-	// duration: 0s
+	// err: abort after 1ms
+	// exited early? true
 }

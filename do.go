@@ -5,23 +5,24 @@ import (
 	"sync"
 )
 
-// Do starts each function in its own goroutine.
-// Errors returned by a function do not halt execution,
+// Do runs each task concurrently
+// and waits for them all to finish.
+// Errors returned by tasks do not cancel execution,
 // but are joined into a multierror return value.
-// If a function panics during execution,
+// If a task panics during execution,
 // a panic will be caught and rethrown in the parent Goroutine.
-func Do(fns ...func() error) error {
+func Do(tasks ...func() error) error {
 	type result struct {
 		err   error
 		panic any
 	}
 
 	var wg sync.WaitGroup
-	errch := make(chan result, len(fns))
+	errch := make(chan result, len(tasks))
 
-	wg.Add(len(fns))
-	for i := range fns {
-		fn := fns[i]
+	wg.Add(len(tasks))
+	for i := range tasks {
+		fn := tasks[i]
 		go func() {
 			defer wg.Done()
 			defer func() {

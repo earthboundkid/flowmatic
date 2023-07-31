@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 )
 
-// Race runs fns in concurrently
+// Race runs each task concurrently
 // and waits for them all to finish.
 // Each function receives a child context
 // which is cancelled once one function has successfully completed or panicked.
@@ -16,12 +16,12 @@ import (
 // Race returns a multierror containing all the errors.
 // If a function panics during execution,
 // a panic will be caught and rethrown in the parent Goroutine.
-func Race(ctx context.Context, fns ...func(context.Context) error) error {
+func Race(ctx context.Context, tasks ...func(context.Context) error) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	errs := make([]error, len(fns))
+	errs := make([]error, len(tasks))
 	var success atomic.Bool
-	_ = eachN(len(fns), len(fns), func(pos int) error {
+	_ = eachN(len(tasks), len(tasks), func(pos int) error {
 		defer func() {
 			panicVal := recover()
 			if panicVal != nil {
@@ -29,7 +29,7 @@ func Race(ctx context.Context, fns ...func(context.Context) error) error {
 				panic(panicVal)
 			}
 		}()
-		err := fns[pos](ctx)
+		err := tasks[pos](ctx)
 		if err != nil {
 			errs[pos] = err
 			return nil

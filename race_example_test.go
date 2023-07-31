@@ -20,7 +20,7 @@ func sleepFor(ctx context.Context, d time.Duration) bool {
 	}
 }
 
-func ExampleDoContextRace() {
+func ExampleRace() {
 	task := func(d time.Duration) func(context.Context) error {
 		return func(ctx context.Context) error {
 			if sleepFor(ctx, d) {
@@ -33,7 +33,7 @@ func ExampleDoContextRace() {
 	}
 	ctx := context.Background()
 	start := time.Now()
-	err := flowmatic.DoContextRace(ctx,
+	err := flowmatic.Race(ctx,
 		task(1*time.Millisecond),
 		task(1*time.Second),
 		task(1*time.Minute),
@@ -48,7 +48,7 @@ func ExampleDoContextRace() {
 	// duration: 0s
 }
 
-func ExampleDoContextRace_fakeRequest() {
+func ExampleRace_fakeRequest() {
 	// Setup fake requests
 	request := func(ctx context.Context, page string) (string, error) {
 		var sleepLength time.Duration
@@ -69,7 +69,7 @@ func ExampleDoContextRace_fakeRequest() {
 	// Make variables to hold responses
 	var pageA, pageB, pageC string
 	// Race the requests to see who can answer first
-	err := flowmatic.DoContextRace(ctx,
+	err := flowmatic.Race(ctx,
 		func(ctx context.Context) error {
 			var err error
 			pageA, err = request(ctx, "A")

@@ -6,17 +6,17 @@ import (
 	"sync/atomic"
 )
 
-// DoContextRace runs fns in concurrently
+// Race runs fns in concurrently
 // and waits for them all to finish.
 // Each function receives a child context
 // which is cancelled once one function has successfully completed or panicked.
-// DoContextRace returns nil
+// Race returns nil
 // if at least one function completes without an error.
 // If all functions return an error,
-// DoContextRace returns a multierror containing all the errors.
+// Race returns a multierror containing all the errors.
 // If a function panics during execution,
 // a panic will be caught and rethrown in the parent Goroutine.
-func DoContextRace(ctx context.Context, fns ...func(context.Context) error) error {
+func Race(ctx context.Context, fns ...func(context.Context) error) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	errs := make([]error, len(fns))

@@ -9,13 +9,13 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
-func TestDoContextRace_join_errs(t *testing.T) {
+func TestRace_join_errs(t *testing.T) {
 	var (
 		a = errors.New("a")
 		b = errors.New("b")
 	)
 
-	err := flowmatic.DoContextRace(context.Background(),
+	err := flowmatic.Race(context.Background(),
 		func(ctx context.Context) error {
 			if !sleepFor(ctx, 10*time.Millisecond) {
 				return ctx.Err()

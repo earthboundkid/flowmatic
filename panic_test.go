@@ -105,13 +105,13 @@ func TestDo_panic(t *testing.T) {
 	}
 }
 
-func TestDoContextRace_panic(t *testing.T) {
+func TestRace_panic(t *testing.T) {
 	var (
 		n   atomic.Int64
 		err error
 	)
 	r := try(func() {
-		err = flowmatic.DoContextRace(context.Background(),
+		err = flowmatic.Race(context.Background(),
 			func(context.Context) error {
 				n.Add(1)
 				return nil
@@ -138,13 +138,13 @@ func TestDoContextRace_panic(t *testing.T) {
 	}
 }
 
-func TestDoContext_panic(t *testing.T) {
+func TestAll_panic(t *testing.T) {
 	var (
 		n   atomic.Int64
 		err error
 	)
 	r := try(func() {
-		err = flowmatic.DoContext(context.Background(),
+		err = flowmatic.All(context.Background(),
 			func(context.Context) error {
 				n.Add(1)
 				return nil

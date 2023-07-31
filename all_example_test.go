@@ -8,7 +8,7 @@ import (
 	"github.com/carlmjohnson/flowmatic"
 )
 
-func ExampleDoContext() {
+func ExampleAll() {
 	task := func(d time.Duration) func(context.Context) error {
 		return func(ctx context.Context) error {
 			if sleepFor(ctx, d) {
@@ -21,7 +21,7 @@ func ExampleDoContext() {
 	}
 	ctx := context.Background()
 	start := time.Now()
-	err := flowmatic.DoContext(ctx,
+	err := flowmatic.All(ctx,
 		task(1*time.Millisecond),
 		task(10*time.Millisecond),
 		task(100*time.Millisecond),

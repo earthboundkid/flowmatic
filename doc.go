@@ -1,4 +1,15 @@
-// Package flowmatic contains generic concurrent task runners.
+// Package flowmatic contains easy-to-use, generic, concurrent task runners.
+//
+// Comparison of simple helpers:
+//
+//	       Tasks       Cancels Context?   Collect results?
+//	Do     Different   No                 No
+//	All    Different   On error           No
+//	Race   Different   On success         No
+//	Each   Same        No                 No
+//	Map    Same        On error           Yes
+//
+// ManageTasks and TaskPool allow for advanced concurrency patterns.
 package flowmatic
 
 // MaxProcs means use GOMAXPROCS workers when doing tasks.

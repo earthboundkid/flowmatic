@@ -57,11 +57,17 @@ func ExampleMap_simple() {
 	// Start with some slice of input work
 	input := []string{"0", "1", "42", "1337"}
 	// Have a task that takes a context
-	decodeAndDouble := func(_ context.Context, s string) (int, error) {
+	decodeAndDouble := func(ctx context.Context, s string) (int, error) {
+		// Do some work
 		n, err := strconv.Atoi(s)
 		if err != nil {
 			return 0, err
 		}
+		// Return early if context was canceled
+		if ctx.Err() != nil {
+			return 0, ctx.Err()
+		}
+		// Do more work
 		return 2 * n, nil
 	}
 	// Concurrently process input into output

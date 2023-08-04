@@ -7,7 +7,7 @@ import (
 // All runs each task concurrently
 // and waits for them all to finish.
 // Each task receives a child context
-// which is cancelled once one task returns an error or panics.
+// which is canceled once one task returns an error or panics.
 // All returns nil if all tasks succeed.
 // Otherwise,
 // All returns a multierror containing the errors encountered.

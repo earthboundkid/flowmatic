@@ -15,7 +15,7 @@ Flowmatic requires Go 1.20+.
 - Handles a variety of concurrency problems such as heterogenous task groups, homogenous execution of a task over a slice, and dynamic work spawning
 - Aggregates errors
 - Properly propagates panics across goroutine boundaries
-- Has helpers for context cancellation
+- Has helpers for context cancelation
 - Few dependencies
 - Good test coverage
 
@@ -91,9 +91,9 @@ err := errors.Join(errs...)
 </tr>
 </table>
 
-To create a context for tasks that is cancelled on the first error,
+To create a context for tasks that is canceled on the first error,
 use `flowmatic.All`.
-To create a context for tasks that is cancelled on the first success,
+To create a context for tasks that is canceled on the first success,
 use `flowmatic.Race`.
 
 ```go

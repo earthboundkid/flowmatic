@@ -9,7 +9,7 @@ import (
 // Race runs each task concurrently
 // and waits for them all to finish.
 // Each function receives a child context
-// which is cancelled once one function has successfully completed or panicked.
+// which is canceled once one function has successfully completed or panicked.
 // Race returns nil
 // if at least one function completes without an error.
 // If all functions return an error,

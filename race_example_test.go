@@ -2,6 +2,7 @@ package flowmatic_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,30 +10,35 @@ import (
 )
 
 func ExampleRace() {
-	task := func(d time.Duration) func(context.Context) error {
-		return func(ctx context.Context) error {
-			// sleepFor is a cancellable time.Sleep
-			if !sleepFor(ctx, d) {
-				fmt.Println("canceled")
-				return ctx.Err()
-			}
-			fmt.Println("slept for", d)
-			return nil
-		}
-	}
 	ctx := context.Background()
 	start := time.Now()
 	err := flowmatic.Race(ctx,
-		task(1*time.Millisecond),
-		task(10*time.Millisecond),
-		task(100*time.Millisecond),
+		func(ctx context.Context) error {
+			// This task sleeps for only 1ms
+			d := 1 * time.Millisecond
+			time.Sleep(d)
+			fmt.Println("slept for", d)
+			return nil
+		},
+		func(ctx context.Context) error {
+			// This task wants to sleep for a whole minute.
+			d := 1 * time.Minute
+			// But sleepFor is a cancelable time.Sleep.
+			// So when the other task completes,
+			// it cancels this one, causing it to return early.
+			if !sleepFor(ctx, d) {
+				fmt.Println("canceled")
+			}
+			// The error here is ignored
+			// because the other task succeeded
+			return errors.New("ignored")
+		},
 	)
 	// Err is nil as long as one task succeeds
 	fmt.Println("err:", err)
 	fmt.Println("exited early?", time.Since(start) < 10*time.Millisecond)
 	// Output:
 	// slept for 1ms
-	// canceled
 	// canceled
 	// err: <nil>
 	// exited early? true

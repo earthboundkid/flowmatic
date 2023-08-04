@@ -41,7 +41,7 @@ func eachN(numWorkers, numItems int, task func(int) error) error {
 		},
 		func() error {
 			for r := range ouch {
-				if r.Panic != nil {
+				if r.Panic != nil && panicVal == nil {
 					panicVal = r.Panic
 				}
 				if r.Err != nil {

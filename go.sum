@@ -1,4 +1,2 @@
-github.com/carlmjohnson/deque v0.22.0 h1:yIaXxHcj6/jUK834fMTZUgYavW/0IdA3whrzVvfqvv4=
-github.com/carlmjohnson/deque v0.22.0/go.mod h1:6171GeeDBqexi4z2OoIsqfJfD2BK+MdlhfwOxurcniA=
-golang.org/x/exp v0.0.0-20230116083435-1de6713980de h1:DBWn//IJw30uYCgERoxCg84hWtA97F4wMiKOIh00Uf0=
-golang.org/x/exp v0.0.0-20230116083435-1de6713980de/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
+github.com/carlmjohnson/deque v0.23.1 h1:X2HOJM9xcglY03deMZ0oZ1V2xtbqYV7dJDnZiSZN4Ak=
+github.com/carlmjohnson/deque v0.23.1/go.mod h1:LF5NJjICBrEOPx84pxPL4nCimy5n9NQjxKi5cXkh+8U=

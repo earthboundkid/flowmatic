@@ -36,7 +36,7 @@ func ManageTasks[Input, Output any](numWorkers int, task Task[Input, Output], ma
 		select {
 		case inch <- item:
 			inflight++
-			queue.PopHead()
+			queue.RemoveFront()
 		case r := <-out:
 			inflight--
 			if r.Panic != nil {
@@ -46,7 +46,7 @@ func ManageTasks[Input, Output any](numWorkers int, task Task[Input, Output], ma
 			if !ok {
 				return
 			}
-			queue.Append(items...)
+			queue.PushBackSlice(items)
 		}
 	}
 }

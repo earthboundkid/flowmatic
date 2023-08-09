@@ -1,7 +1,5 @@
 module github.com/carlmjohnson/flowmatic
 
-go 1.20
+go 1.21
 
-require github.com/carlmjohnson/deque v0.22.0
-
-require golang.org/x/exp v0.0.0-20230116083435-1de6713980de
+require github.com/carlmjohnson/deque v0.23.1

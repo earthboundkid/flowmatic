@@ -5,12 +5,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing/fstest"
 
 	"github.com/carlmjohnson/flowmatic"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 func ExampleManageTasks() {
@@ -76,7 +75,10 @@ func ExampleManageTasks() {
 	// Process the tasks with as many workers as GOMAXPROCS
 	flowmatic.ManageTasks(flowmatic.MaxProcs, task, manager, "/")
 
-	keys := maps.Keys(results)
+	keys := make([]string, 0, len(results))
+	for key := range results {
+		keys = append(keys, key)
+	}
 	slices.Sort(keys)
 	for _, key := range keys {
 		fmt.Println(key, "links to:")

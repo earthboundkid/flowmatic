@@ -25,7 +25,10 @@ func TestManageTasks_drainage(t *testing.T) {
 		int
 		error
 	}{}
-	for r := range flowmatic.Tasks(5, task, 0, 1) {
+	for r := range flowmatic.Tasks(2, task, 0, 1) {
+		if time.Since(start) > sleepTime {
+			t.Fatal("sleep too much!")
+		}
 		m[r.In] = struct {
 			int
 			error
@@ -46,12 +49,11 @@ func TestManageTasks_drainage(t *testing.T) {
 }
 
 func TestManageTasks_drainage2(t *testing.T) {
-	const shortSleepTime = 10 * time.Millisecond
-	const longSleepTime = 30 * time.Millisecond
+	const sleepTime = 10 * time.Millisecond
 	b := false
 	task := func(n int) (int, error) {
 		if n == 0 {
-			time.Sleep(longSleepTime)
+			time.Sleep(sleepTime)
 			b = true
 			return n, errors.New("text string")
 		}
@@ -63,6 +65,9 @@ func TestManageTasks_drainage2(t *testing.T) {
 		error
 	}{}
 	for r := range flowmatic.Tasks(2, task, 0, 1) {
+		if time.Since(start) > sleepTime {
+			t.Fatal("slept too much")
+		}
 		m[r.In] = struct {
 			int
 			error
@@ -72,7 +77,7 @@ func TestManageTasks_drainage2(t *testing.T) {
 	if s := fmt.Sprint(m); s != "map[1:-]" {
 		t.Fatal(s)
 	}
-	if time.Since(start) < longSleepTime {
+	if time.Since(start) < sleepTime {
 		t.Fatal("didn't sleep enough")
 	}
 	if !b {

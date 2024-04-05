@@ -1,4 +1,4 @@
-module github.com/carlmjohnson/flowmatic
+module github.com/earthboundkid/flowmatic
 
 go 1.21
 

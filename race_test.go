@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
 func sleepFor(ctx context.Context, d time.Duration) bool {

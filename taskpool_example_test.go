@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
 func ExampleTaskPool() {

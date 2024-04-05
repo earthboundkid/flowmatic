@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
 func TestMap(t *testing.T) {

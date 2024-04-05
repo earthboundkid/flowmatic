@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing/fstest"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
-func ExampleManageTasks() {
+func ExampleAllTasks() {
 	// Example site to crawl with recursive links
 	srv := httptest.NewServer(http.FileServer(http.FS(fstest.MapFS{
 		"index.html": &fstest.MapFile{
@@ -52,28 +52,29 @@ func ExampleManageTasks() {
 	// Manager keeps track of which pages have been visited and the results graph
 	tried := map[string]int{}
 	results := map[string][]string{}
-	manager := func(req string, urls []string, err error) ([]string, bool) {
-		if err != nil {
+
+	// Process the tasks with as many workers as GOMAXPROCS
+	it := flowmatic.Tasks(flowmatic.MaxProcs, task, "/")
+	for r := range it {
+		req := r.In
+		urls := r.Out
+		if r.HasErr() {
 			// If there's a problem fetching a page, try three times
 			if tried[req] < 3 {
 				tried[req]++
-				return []string{req}, true
+				r.AddTask(req)
+				continue
 			}
-			return nil, false
+			break
 		}
 		results[req] = urls
-		var newurls []string
 		for _, u := range urls {
 			if tried[u] == 0 {
-				newurls = append(newurls, u)
+				r.AddTask(u)
 				tried[u]++
 			}
 		}
-		return newurls, true
 	}
-
-	// Process the tasks with as many workers as GOMAXPROCS
-	flowmatic.ManageTasks(flowmatic.MaxProcs, task, manager, "/")
 
 	keys := make([]string, 0, len(results))
 	for key := range results {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
 func ExampleEach() {

@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
 func try(f func()) (r any) {
@@ -25,12 +25,10 @@ func TestManageTasks_panic(t *testing.T) {
 		return n * 3, nil
 	}
 	var triples []int
-	manager := func(n, triple int, err error) ([]int, bool) {
-		triples = append(triples, triple)
-		return nil, true
-	}
 	r := try(func() {
-		flowmatic.ManageTasks(1, task, manager, 1, 2, 3, 4)
+		for r := range flowmatic.Tasks(1, task, 1, 2, 3, 4) {
+			triples = append(triples, r.Out)
+		}
 	})
 	if r == nil {
 		t.Fatal("should have panicked")

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
 func TestManageTasks_drainage(t *testing.T) {
@@ -25,17 +25,15 @@ func TestManageTasks_drainage(t *testing.T) {
 		int
 		error
 	}{}
-	manager := func(in, out int, err error) ([]int, bool) {
-		m[in] = struct {
+	for r := range flowmatic.Tasks(5, task, 0, 1) {
+		m[r.In] = struct {
 			int
 			error
-		}{out, err}
-		if err != nil {
-			return nil, false
+		}{r.Out, r.Err}
+		if r.HasErr() {
+			break
 		}
-		return nil, true
 	}
-	flowmatic.ManageTasks(5, task, manager, 0, 1)
 	if s := fmt.Sprint(m); s != "map[1:text string]" {
 		t.Fatal(s)
 	}

@@ -50,12 +50,12 @@ func TestManageTasks_drainage2(t *testing.T) {
 	const longSleepTime = 30 * time.Millisecond
 	b := false
 	task := func(n int) (int, error) {
-		if n == 1 {
+		if n == 0 {
 			time.Sleep(longSleepTime)
 			b = true
-			return 1, errors.New("text string")
+			return n, errors.New("text string")
 		}
-		return 0, errors.New("-")
+		return n, errors.New("-")
 	}
 	start := time.Now()
 	m := map[int]struct {
@@ -67,10 +67,9 @@ func TestManageTasks_drainage2(t *testing.T) {
 			int
 			error
 		}{r.Out, r.Err}
-		time.Sleep(shortSleepTime)
 		break
 	}
-	if s := fmt.Sprint(m); s != "map[0:-]" {
+	if s := fmt.Sprint(m); s != "map[1:-]" {
 		t.Fatal(s)
 	}
 	if time.Since(start) < longSleepTime {

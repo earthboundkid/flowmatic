@@ -1,4 +1,4 @@
-// Package flowmatic contains easy-to-use, generic, concurrent task runners.
+// Package flowmatic contains easy-to-use generic helpers for structured concurrency.
 //
 // Comparison of simple helpers:
 //

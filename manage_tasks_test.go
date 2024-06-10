@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic"
 )
 
 func TestManageTasks_drainage(t *testing.T) {
@@ -25,18 +25,56 @@ func TestManageTasks_drainage(t *testing.T) {
 		int
 		error
 	}{}
-	manager := func(in, out int, err error) ([]int, bool) {
-		m[in] = struct {
+	for r := range flowmatic.Tasks(2, task, 0, 1) {
+		if time.Since(start) > sleepTime {
+			t.Fatal("sleep too much!")
+		}
+		m[r.In] = struct {
 			int
 			error
-		}{out, err}
-		if err != nil {
-			return nil, false
+		}{r.Out, r.Err}
+		if r.HasErr() {
+			break
 		}
-		return nil, true
 	}
-	flowmatic.ManageTasks(5, task, manager, 0, 1)
 	if s := fmt.Sprint(m); s != "map[1:text string]" {
+		t.Fatal(s)
+	}
+	if time.Since(start) < sleepTime {
+		t.Fatal("didn't sleep enough")
+	}
+	if !b {
+		t.Fatal("didn't finish")
+	}
+}
+
+func TestManageTasks_drainage2(t *testing.T) {
+	const sleepTime = 10 * time.Millisecond
+	b := false
+	task := func(n int) (int, error) {
+		if n == 0 {
+			time.Sleep(sleepTime)
+			b = true
+			return n, errors.New("text string")
+		}
+		return n, errors.New("-")
+	}
+	start := time.Now()
+	m := map[int]struct {
+		int
+		error
+	}{}
+	for r := range flowmatic.Tasks(2, task, 0, 1) {
+		if time.Since(start) > sleepTime {
+			t.Fatal("slept too much")
+		}
+		m[r.In] = struct {
+			int
+			error
+		}{r.Out, r.Err}
+		break
+	}
+	if s := fmt.Sprint(m); s != "map[1:-]" {
 		t.Fatal(s)
 	}
 	if time.Since(start) < sleepTime {

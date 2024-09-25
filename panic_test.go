@@ -27,8 +27,10 @@ func TestTasks_panic(t *testing.T) {
 	}
 	var triples []int
 	r := try(func() {
-		for r := range flowmatic.Tasks(1, task, 1, 2, 3, 4, 5, 6, 7) {
-			triples = append(triples, r.Out)
+		m := flowmatic.Manage(1, task, 1, 2, 3, 4, 5, 6, 7)
+		for range m.Start() {
+			_, out, _ := m.Values()
+			triples = append(triples, out)
 		}
 	})
 	if r == nil {

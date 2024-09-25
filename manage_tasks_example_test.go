@@ -58,21 +58,23 @@ func ExampleTasks() {
 	// tried tracks how many times a url has been queued to be fetched
 	tried := map[string]int{}
 
-	// Process the tasks with as many workers as GOMAXPROCS
-	for task := range flowmatic.Tasks(flowmatic.MaxProcs, task, "/") {
-		req, urls := task.In, task.Out
-		if task.HasErr() {
+	// Manage the tasks with as many workers as GOMAXPROCS
+	m := flowmatic.Manage(flowmatic.MaxProcs, task, "/")
+	for range m.Start() {
+		req := m.Input()
+		if m.HasErr() {
 			// If there's a problem fetching a page, try three times
 			if tried[req] < 3 {
 				tried[req]++
-				task.AddTask(req)
+				m.Queue(req)
 			}
 			continue
 		}
+		urls := m.Output()
 		results[req] = urls
 		for _, u := range urls {
 			if tried[u] == 0 {
-				task.AddTask(u)
+				m.Queue(u)
 				tried[u]++
 			}
 		}

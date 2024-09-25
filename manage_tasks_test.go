@@ -25,15 +25,17 @@ func TestManageTasks_drainage(t *testing.T) {
 		int
 		error
 	}{}
-	for r := range flowmatic.Tasks(2, task, 0, 1) {
+	manager := flowmatic.Manage(2, task, 0, 1)
+	for range manager.Start() {
 		if time.Since(start) > sleepTime {
-			t.Fatal("sleep too much!")
+			t.Fatal("slept too much")
 		}
-		m[r.In] = struct {
+		in, out, err := manager.Values()
+		m[in] = struct {
 			int
 			error
-		}{r.Out, r.Err}
-		if r.HasErr() {
+		}{out, err}
+		if manager.HasErr() {
 			break
 		}
 	}
@@ -64,14 +66,16 @@ func TestManageTasks_drainage2(t *testing.T) {
 		int
 		error
 	}{}
-	for r := range flowmatic.Tasks(2, task, 0, 1) {
+	manager := flowmatic.Manage(2, task, 0, 1)
+	for range manager.Start() {
 		if time.Since(start) > sleepTime {
 			t.Fatal("slept too much")
 		}
-		m[r.In] = struct {
+		in, out, err := manager.Values()
+		m[in] = struct {
 			int
 			error
-		}{r.Out, r.Err}
+		}{out, err}
 		break
 	}
 	if s := fmt.Sprint(m); s != "map[1:-]" {

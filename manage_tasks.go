@@ -1,8 +1,6 @@
 package flowmatic
 
 import (
-	"iter"
-
 	"github.com/earthboundkid/deque/v2"
 )
 
@@ -53,41 +51,74 @@ func manageTasks[Input, Output any](numWorkers int, task Task[Input, Output], ma
 	}
 }
 
-type TaskResult[Input, Output any] struct {
-	In       Input
-	Out      Output
-	Err      error
-	newitems []Input
+// Manage creates a Manager to run tasks concurrently
+// using numWorkers concurrent workers (or GOMAXPROCS workers if numWorkers < 1).
+func Manage[Input, Output any](numWorkers int, task Task[Input, Output], initial ...Input) *Manager[Input, Output] {
+	return &Manager[Input, Output]{
+		numWorkers: numWorkers,
+		task:       task,
+		newItems:   initial,
+	}
 }
 
-func (to *TaskResult[Input, Output]) HasErr() bool {
-	return to.Err != nil
-}
-
-func (to *TaskResult[Input, Output]) AddTask(in Input) {
-	to.newitems = append(to.newitems, in)
-}
-
-// Tasks runs tasks concurrently
-// using numWorkers concurrent workers (or GOMAXPROCS workers if numWorkers < 1)
+// Manager is TKTK TODO
 // which a sequence of TaskResults yielded serially.
-// To add more jobs to call AddTask on the TaskResult.
+// To add more jobs to call Queue on the Manager.
 // If a task panics during execution,
 // the panic will be caught and rethrown.
-func Tasks[Input, Output any](numWorkers int, task Task[Input, Output], initial ...Input) iter.Seq[*TaskResult[Input, Output]] {
-	return func(yield func(*TaskResult[Input, Output]) bool) {
+type Manager[Input, Output any] struct {
+	numWorkers int
+	task       Task[Input, Output]
+	newItems   []Input
+	in         Input
+	out        Output
+	err        error
+	executing  bool
+}
+
+func (m *Manager[Input, Output]) Start() func(func() bool) {
+	if m.executing {
+		panic("already executing")
+	}
+	return func(yield func() bool) {
+		m.executing = true
 		manager := func(in Input, out Output, err error) ([]Input, bool) {
-			to := TaskResult[Input, Output]{
-				In:  in,
-				Out: out,
-				Err: err,
-			}
-			if !yield(&to) {
+			m.in, m.out, m.err = in, out, err
+			m.newItems = nil
+			if !yield() {
 				return nil, false
 			}
-			return to.newitems, true
+			return m.newItems, true
 		}
 
-		manageTasks(numWorkers, task, manager, initial...)
+		manageTasks(m.numWorkers, m.task, manager, m.newItems...)
 	}
+}
+
+func (m *Manager[Input, Output]) Queue(in ...Input) {
+	m.newItems = append(m.newItems, in...)
+}
+
+func (m *Manager[Input, Output]) Input() Input {
+	return m.in
+}
+
+func (m *Manager[Input, Output]) Output() Output {
+	return m.out
+}
+
+func (m *Manager[Input, Output]) Error() error {
+	return m.err
+}
+
+func (m *Manager[Input, Output]) Result() (Output, error) {
+	return m.out, m.err
+}
+
+func (m *Manager[Input, Output]) Values() (Input, Output, error) {
+	return m.in, m.out, m.err
+}
+
+func (m *Manager[Input, Output]) HasErr() bool {
+	return m.err != nil
 }

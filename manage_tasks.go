@@ -85,7 +85,7 @@ func (m *Manager[Input, Output]) Exec() func(func() bool) {
 		m.executing = true
 		manager := func(in Input, out Output, err error) ([]Input, bool) {
 			m.in, m.out, m.err = in, out, err
-			m.newItems = nil
+			m.newItems = m.newItems[:0]
 			if !yield() {
 				return nil, false
 			}

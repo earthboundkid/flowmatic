@@ -261,20 +261,29 @@ task := func(u string) ([]string, error) {
     return getLinks(page), nil
 }
 
+// Process the tasks with as many workers as GOMAXPROCS
+manager := flowmatic.ManageTasks(flowmatic.MaxProcs, task)
+
 // Map from page to links
 // Doesn't need a lock because only the manager touches it
 results := map[string][]string{}
 var managerErr error
 
-// Manager keeps track of which pages have been visited and the results graph
-manager := func(req string, links []string, err error) ([]string, bool) {
+// Prime the initial queue
+manager.Queue("http://example.com/")
+
+// Start execution and track of which pages have been visited
+// and the results graph
+for range manager.Exec() {
     // Halt execution after the first error
-    if err != nil {
-        managerErr = err
-        return nil, false
+    if manager.HasErr() {
+        managerErr = manager.Error()
+        break
     }
+    links := manager.Output()
+
     // Save final results in map
-    results[req] = urls
+    results[manager.Input()] = links
 
     // Check for new pages to scrape
     var newpages []string
@@ -288,18 +297,15 @@ manager := func(req string, links []string, err error) ([]string, bool) {
         // Add placeholder to map to prevent double scraping
         results[link] = nil
     }
-    return newpages, true
 }
 
-// Process the tasks with as many workers as GOMAXPROCS
-flowmatic.ManageTasks(flowmatic.MaxProcs, task, manager, "http://example.com/")
 // Check if anything went wrong
 if managerErr != nil {
     fmt.Println("error", managerErr)
 }
 ```
 
-Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.ManageTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
+Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.Manage` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
 
 Centralizing control in the manager makes reasoning about the code radically simpler. When writing locking code, if you have M states and N methods, you need to think about all N states in each of the M methods, giving you an M × N code explosion. By centralizing the logic, the N states only need to be considered in one location: the manager.
 

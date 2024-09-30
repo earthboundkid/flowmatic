@@ -18,7 +18,7 @@ func try(f func()) (r any) {
 	return
 }
 
-func TestTasks_panic(t *testing.T) {
+func TestManage_panic(t *testing.T) {
 	task := func(n int) (int, error) {
 		if n == 3 {
 			panic("3!!")
@@ -27,10 +27,10 @@ func TestTasks_panic(t *testing.T) {
 	}
 	var triples []int
 	r := try(func() {
-		m := flowmatic.Manage(1, task, 1, 2, 3, 4, 5, 6, 7)
-		for range m.Start() {
-			_, out, _ := m.Values()
-			triples = append(triples, out)
+		m := flowmatic.Manage(1, task)
+		m.Queue(1, 2, 3, 4, 5, 6, 7)
+		for range m.Exec() {
+			triples = append(triples, m.Output())
 		}
 	})
 	if r == nil {
@@ -41,6 +41,45 @@ func TestTasks_panic(t *testing.T) {
 	}
 	if fmt.Sprint(triples) != "[3 6]" {
 		t.Fatal(triples)
+	}
+	task2 := func(n int) (int, error) {
+		return n * 3, nil
+	}
+	triples = nil
+	r2 := try(func() {
+		m := flowmatic.Manage(flowmatic.MaxProcs, task2)
+		m.Queue(1, 2, 3, 4, 5, 6, 7)
+		for range m.Exec() {
+			for range m.Exec() {
+				triples = append(triples, m.Output())
+			}
+		}
+	})
+	if r2 != "already executing" {
+		t.Fatal("should have panicked")
+	}
+	var triples2 []int
+	r3 := try(func() {
+		m := flowmatic.Manage(flowmatic.MaxProcs, task2)
+		m.Queue(1, 2, 3, 4)
+		for range m.Exec() {
+			triples = append(triples, m.Output())
+		}
+		slices.Sort(triples)
+		m.Queue(5, 6, 7, 8)
+		for range m.Exec() {
+			triples2 = append(triples2, m.Output())
+		}
+		slices.Sort(triples2)
+	})
+	if r3 != nil {
+		t.Fatal("should not have panicked")
+	}
+	if fmt.Sprint(triples) != "[3 6 9 12]" {
+		t.Fatal(triples)
+	}
+	if fmt.Sprint(triples2) != "[15 18 21 24]" {
+		t.Fatal(triples2)
 	}
 }
 

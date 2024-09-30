@@ -25,8 +25,9 @@ func TestManageTasks_drainage(t *testing.T) {
 		int
 		error
 	}{}
-	manager := flowmatic.Manage(2, task, 0, 1)
-	for range manager.Start() {
+	manager := flowmatic.Manage(2, task)
+	manager.Queue(0, 1)
+	for range manager.Exec() {
 		if time.Since(start) > sleepTime {
 			t.Fatal("slept too much")
 		}
@@ -66,8 +67,9 @@ func TestManageTasks_drainage2(t *testing.T) {
 		int
 		error
 	}{}
-	manager := flowmatic.Manage(2, task, 0, 1)
-	for range manager.Start() {
+	manager := flowmatic.Manage(2, task)
+	manager.Queue(0, 1)
+	for range manager.Exec() {
 		if time.Since(start) > sleepTime {
 			t.Fatal("slept too much")
 		}

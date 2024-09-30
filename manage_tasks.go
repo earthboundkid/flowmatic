@@ -53,11 +53,10 @@ func manageTasks[Input, Output any](numWorkers int, task Task[Input, Output], ma
 
 // Manage creates a Manager to run tasks concurrently
 // using numWorkers concurrent workers (or GOMAXPROCS workers if numWorkers < 1).
-func Manage[Input, Output any](numWorkers int, task Task[Input, Output], initial ...Input) *Manager[Input, Output] {
+func Manage[Input, Output any](numWorkers int, task Task[Input, Output]) *Manager[Input, Output] {
 	return &Manager[Input, Output]{
 		numWorkers: numWorkers,
 		task:       task,
-		newItems:   initial,
 	}
 }
 
@@ -76,7 +75,7 @@ type Manager[Input, Output any] struct {
 	executing  bool
 }
 
-func (m *Manager[Input, Output]) Start() func(func() bool) {
+func (m *Manager[Input, Output]) Exec() func(func() bool) {
 	if m.executing {
 		panic("already executing")
 	}
@@ -92,6 +91,7 @@ func (m *Manager[Input, Output]) Start() func(func() bool) {
 		}
 
 		manageTasks(m.numWorkers, m.task, manager, m.newItems...)
+		m.executing = false
 	}
 }
 

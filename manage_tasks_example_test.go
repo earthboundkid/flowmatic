@@ -13,7 +13,7 @@ import (
 	"github.com/earthboundkid/flowmatic/v2"
 )
 
-func ExampleTasks() {
+func ExampleManager() {
 	// Example site to crawl with recursive links
 	srv := httptest.NewServer(http.FileServer(http.FS(fstest.MapFS{
 		"index.html": &fstest.MapFile{
@@ -59,8 +59,9 @@ func ExampleTasks() {
 	tried := map[string]int{}
 
 	// Manage the tasks with as many workers as GOMAXPROCS
-	m := flowmatic.Manage(flowmatic.MaxProcs, task, "/")
-	for range m.Start() {
+	m := flowmatic.Manage(flowmatic.MaxProcs, task)
+	m.Queue("/")
+	for range m.Exec() {
 		req := m.Input()
 		if m.HasErr() {
 			// If there's a problem fetching a page, try three times

@@ -1,6 +1,8 @@
 package flowmatic
 
 import (
+	"iter"
+
 	"github.com/earthboundkid/deque/v2"
 )
 
@@ -111,14 +113,20 @@ func (m *Manager[Input, Output]) Error() error {
 	return m.err
 }
 
-func (m *Manager[Input, Output]) Result() (Output, error) {
-	return m.out, m.err
-}
-
-func (m *Manager[Input, Output]) Values() (Input, Output, error) {
+func (m *Manager[Input, Output]) Result() (Input, Output, error) {
 	return m.in, m.out, m.err
 }
 
 func (m *Manager[Input, Output]) HasErr() bool {
 	return m.err != nil
+}
+
+func (m *Manager[Input, Output]) Work() iter.Seq2[Input, Output] {
+	return func(yield func(Input, Output) bool) {
+		for range m.Exec() {
+			if m.HasErr() || !yield(m.Input(), m.Output()) {
+				return
+			}
+		}
+	}
 }

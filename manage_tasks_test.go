@@ -31,7 +31,7 @@ func TestManageTasks_drainage(t *testing.T) {
 		if time.Since(start) > sleepTime {
 			t.Fatal("slept too much")
 		}
-		in, out, err := manager.Values()
+		in, out, err := manager.Result()
 		m[in] = struct {
 			int
 			error
@@ -73,7 +73,7 @@ func TestManageTasks_drainage2(t *testing.T) {
 		if time.Since(start) > sleepTime {
 			t.Fatal("slept too much")
 		}
-		in, out, err := manager.Values()
+		in, out, err := manager.Result()
 		m[in] = struct {
 			int
 			error

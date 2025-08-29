@@ -28,7 +28,7 @@ func TestManage_panic(t *testing.T) {
 	var triples []int
 	r := try(func() {
 		m := flowmatic.Manage(1, task)
-		m.Queue(1, 2, 3, 4, 5, 6, 7)
+		m.Add(1, 2, 3, 4, 5, 6, 7)
 		for range m.Exec() {
 			triples = append(triples, m.Output())
 		}
@@ -48,7 +48,7 @@ func TestManage_panic(t *testing.T) {
 	triples = nil
 	r2 := try(func() {
 		m := flowmatic.Manage(flowmatic.MaxProcs, task2)
-		m.Queue(1, 2, 3, 4, 5, 6, 7)
+		m.Add(1, 2, 3, 4, 5, 6, 7)
 		for range m.Exec() {
 			for range m.Exec() {
 				triples = append(triples, m.Output())
@@ -61,12 +61,12 @@ func TestManage_panic(t *testing.T) {
 	var triples2 []int
 	r3 := try(func() {
 		m := flowmatic.Manage(flowmatic.MaxProcs, task2)
-		m.Queue(1, 2, 3, 4)
+		m.Add(1, 2, 3, 4)
 		for range m.Exec() {
 			triples = append(triples, m.Output())
 		}
 		slices.Sort(triples)
-		m.Queue(5, 6, 7, 8)
+		m.Add(5, 6, 7, 8)
 		for range m.Exec() {
 			triples2 = append(triples2, m.Output())
 		}

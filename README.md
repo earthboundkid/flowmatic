@@ -267,23 +267,15 @@ manager := flowmatic.ManageTasks(flowmatic.MaxProcs, task)
 // Map from page to links
 // Doesn't need a lock because only the manager touches it
 results := map[string][]string{}
-var managerErr error
 
 // Prime the initial queue
-manager.Queue("http://example.com/")
+manager.Add("http://example.com/")
 
 // Start execution and track of which pages have been visited
 // and the results graph
-for range manager.Exec() {
-    // Halt execution after the first error
-    if manager.HasErr() {
-        managerErr = manager.Error()
-        break
-    }
-    links := manager.Output()
-
+for url, links := range manager.Work() {
     // Save final results in map
-    results[manager.Input()] = links
+    results[url] = links
 
     // Check for new pages to scrape
     var newpages []string
@@ -300,8 +292,8 @@ for range manager.Exec() {
 }
 
 // Check if anything went wrong
-if managerErr != nil {
-    fmt.Println("error", managerErr)
+if manager.HasErr() {
+    fmt.Println("error", manager.Err())
 }
 ```
 

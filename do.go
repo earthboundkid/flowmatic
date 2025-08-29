@@ -20,18 +20,15 @@ func Do(tasks ...func() error) error {
 	var wg sync.WaitGroup
 	errch := make(chan result, len(tasks))
 
-	wg.Add(len(tasks))
-	for i := range tasks {
-		fn := tasks[i]
-		go func() {
-			defer wg.Done()
+	for _, fn := range tasks {
+		wg.Go(func() {
 			defer func() {
 				if panicVal := recover(); panicVal != nil {
 					errch <- result{panic: panicVal}
 				}
 			}()
 			errch <- result{err: fn()}
-		}()
+		})
 	}
 	go func() {
 		wg.Wait()

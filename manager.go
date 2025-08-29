@@ -97,7 +97,7 @@ func (m *Manager[Input, Output]) Exec() func(func() bool) {
 	}
 }
 
-func (m *Manager[Input, Output]) Queue(in ...Input) {
+func (m *Manager[Input, Output]) Add(in ...Input) {
 	m.newItems = append(m.newItems, in...)
 }
 
@@ -109,7 +109,7 @@ func (m *Manager[Input, Output]) Output() Output {
 	return m.out
 }
 
-func (m *Manager[Input, Output]) Error() error {
+func (m *Manager[Input, Output]) Err() error {
 	return m.err
 }
 

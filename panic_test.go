@@ -3,10 +3,11 @@ package flowmatic_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync/atomic"
 	"testing"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic/v2"
 )
 
 func try(f func()) (r any) {
@@ -17,7 +18,7 @@ func try(f func()) (r any) {
 	return
 }
 
-func TestManageTasks_panic(t *testing.T) {
+func TestManage_panic(t *testing.T) {
 	task := func(n int) (int, error) {
 		if n == 3 {
 			panic("3!!")
@@ -25,12 +26,12 @@ func TestManageTasks_panic(t *testing.T) {
 		return n * 3, nil
 	}
 	var triples []int
-	manager := func(n, triple int, err error) ([]int, bool) {
-		triples = append(triples, triple)
-		return nil, true
-	}
 	r := try(func() {
-		flowmatic.ManageTasks(1, task, manager, 1, 2, 3, 4)
+		m := flowmatic.Manage(1, task)
+		m.Add(1, 2, 3, 4, 5, 6, 7)
+		for range m.Exec() {
+			triples = append(triples, m.Output())
+		}
 	})
 	if r == nil {
 		t.Fatal("should have panicked")
@@ -41,6 +42,45 @@ func TestManageTasks_panic(t *testing.T) {
 	if fmt.Sprint(triples) != "[3 6]" {
 		t.Fatal(triples)
 	}
+	task2 := func(n int) (int, error) {
+		return n * 3, nil
+	}
+	triples = nil
+	r2 := try(func() {
+		m := flowmatic.Manage(flowmatic.MaxProcs, task2)
+		m.Add(1, 2, 3, 4, 5, 6, 7)
+		for range m.Exec() {
+			for range m.Exec() {
+				triples = append(triples, m.Output())
+			}
+		}
+	})
+	if r2 != "already executing" {
+		t.Fatal("should have panicked")
+	}
+	var triples2 []int
+	r3 := try(func() {
+		m := flowmatic.Manage(flowmatic.MaxProcs, task2)
+		m.Add(1, 2, 3, 4)
+		for range m.Exec() {
+			triples = append(triples, m.Output())
+		}
+		slices.Sort(triples)
+		m.Add(5, 6, 7, 8)
+		for range m.Exec() {
+			triples2 = append(triples2, m.Output())
+		}
+		slices.Sort(triples2)
+	})
+	if r3 != nil {
+		t.Fatal("should not have panicked")
+	}
+	if fmt.Sprint(triples) != "[3 6 9 12]" {
+		t.Fatal(triples)
+	}
+	if fmt.Sprint(triples2) != "[15 18 21 24]" {
+		t.Fatal(triples2)
+	}
 }
 
 func TestEach_panic(t *testing.T) {
@@ -49,7 +89,7 @@ func TestEach_panic(t *testing.T) {
 		err error
 	)
 	r := try(func() {
-		err = flowmatic.Each(1, []int64{1, 2, 3},
+		err = flowmatic.Each(1, slices.Values([]int64{1, 2, 4, 8, 16}),
 			func(delta int64) error {
 				if delta == 2 {
 					panic("boom")
@@ -67,7 +107,7 @@ func TestEach_panic(t *testing.T) {
 	if r != "boom" {
 		t.Fatal(r)
 	}
-	if n.Load() != 4 {
+	if n.Load() != 29 {
 		t.Fatal(n.Load())
 	}
 }

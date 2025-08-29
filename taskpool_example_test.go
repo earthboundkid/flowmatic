@@ -4,11 +4,14 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"io/fs"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic/v2"
 )
 
 func ExampleTaskPool() {
@@ -19,8 +22,8 @@ func ExampleTaskPool() {
 		log.Fatal(err)
 	}
 
-	for k, sum := range m {
-		fmt.Printf("%s:\t%x\n", k, sum)
+	for _, k := range slices.Sorted(maps.Keys(m)) {
+		fmt.Printf("%s:\t%x\n", k, m[k])
 	}
 
 	// Output:
@@ -60,17 +63,17 @@ func MD5All(ctx context.Context, root string) (map[string][md5.Size]byte, error)
 func walkFilesystem(ctx context.Context, root string, in chan<- string) error {
 	defer close(in)
 
-	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	return filepath.WalkDir(root, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.Mode().IsRegular() {
+		if info.IsDir() {
 			return nil
 		}
 		select {
 		case in <- path:
 		case <-ctx.Done():
-			return ctx.Err()
+			return filepath.SkipAll
 		}
 
 		return nil

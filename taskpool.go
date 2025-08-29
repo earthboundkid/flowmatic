@@ -24,10 +24,9 @@ func TaskPool[Input, Output any](numWorkers int, task Task[Input, Output]) (in c
 	inch := make(chan Input)
 	ouch := make(chan Result[Input, Output], numWorkers)
 	var wg sync.WaitGroup
-	wg.Add(numWorkers)
-	for i := 0; i < numWorkers; i++ {
-		go func() {
-			defer wg.Done()
+
+	for range numWorkers {
+		wg.Go(func() {
 			for inval := range inch {
 				func() {
 					defer func() {
@@ -45,7 +44,7 @@ func TaskPool[Input, Output any](numWorkers int, task Task[Input, Output]) (in c
 					ouch <- Result[Input, Output]{inval, outval, err, nil}
 				}()
 			}
-		}()
+		})
 	}
 	go func() {
 		wg.Wait()

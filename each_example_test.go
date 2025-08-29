@@ -2,17 +2,18 @@ package flowmatic_test
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic/v2"
 )
 
 func ExampleEach() {
-	times := []time.Duration{
+	times := slices.Values([]time.Duration{
 		50 * time.Millisecond,
 		100 * time.Millisecond,
 		200 * time.Millisecond,
-	}
+	})
 	start := time.Now()
 	err := flowmatic.Each(3, times, func(d time.Duration) error {
 		time.Sleep(d)

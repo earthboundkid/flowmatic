@@ -1,4 +1,4 @@
-# Flowmatic [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/flowmatic)](https://pkg.go.dev/github.com/carlmjohnson/flowmatic) [![Coverage Status](https://coveralls.io/repos/github/carlmjohnson/flowmatic/badge.svg)](https://coveralls.io/github/carlmjohnson/flowmatic) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/flowmatic)](https://goreportcard.com/report/github.com/carlmjohnson/flowmatic) [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
+# Flowmatic [![GoDoc](https://pkg.go.dev/badge/github.com/carlmjohnson/flowmatic)](https://pkg.go.dev/github.com/earthboundkid/flowmatic/v2) [![Coverage Status](https://coveralls.io/repos/github/earthboundkid/flowmatic/badge.svg)](https://coveralls.io/github/earthboundkid/flowmatic) [![Go Report Card](https://goreportcard.com/badge/github.com/earthboundkid/flowmatic)](https://goreportcard.com/report/github.com/earthboundkid/flowmatic) [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 ![Flowmatic logo](https://github.com/carlmjohnson/flowmatic/assets/222245/c14936e9-bb35-405b-926e-4cfeb8003439)
 
@@ -261,20 +261,21 @@ task := func(u string) ([]string, error) {
     return getLinks(page), nil
 }
 
+// Process the tasks with as many workers as GOMAXPROCS
+manager := flowmatic.ManageTasks(flowmatic.MaxProcs, task)
+
 // Map from page to links
 // Doesn't need a lock because only the manager touches it
 results := map[string][]string{}
-var managerErr error
 
-// Manager keeps track of which pages have been visited and the results graph
-manager := func(req string, links []string, err error) ([]string, bool) {
-    // Halt execution after the first error
-    if err != nil {
-        managerErr = err
-        return nil, false
-    }
+// Prime the initial queue
+manager.Add("http://example.com/")
+
+// Start execution and track of which pages have been visited
+// and the results graph
+for url, links := range manager.Work() {
     // Save final results in map
-    results[req] = urls
+    results[url] = links
 
     // Check for new pages to scrape
     var newpages []string
@@ -288,18 +289,15 @@ manager := func(req string, links []string, err error) ([]string, bool) {
         // Add placeholder to map to prevent double scraping
         results[link] = nil
     }
-    return newpages, true
 }
 
-// Process the tasks with as many workers as GOMAXPROCS
-flowmatic.ManageTasks(flowmatic.MaxProcs, task, manager, "http://example.com/")
 // Check if anything went wrong
-if managerErr != nil {
-    fmt.Println("error", managerErr)
+if manager.HasErr() {
+    fmt.Println("error", manager.Err())
 }
 ```
 
-Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.ManageTasks` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
+Normally, it is very difficult to keep track of concurrent code because any combination of events could occur in any order or simultaneously, and each combination has to be accounted for by the programmer. `flowmatic.Manage` makes it simple to write concurrent code because everything follows a simple rule: **tasks happen concurrently; the manager runs serially**.
 
 Centralizing control in the manager makes reasoning about the code radically simpler. When writing locking code, if you have M states and N methods, you need to think about all N states in each of the M methods, giving you an M × N code explosion. By centralizing the logic, the N states only need to be considered in one location: the manager.
 

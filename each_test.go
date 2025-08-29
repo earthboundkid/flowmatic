@@ -2,15 +2,16 @@ package flowmatic_test
 
 import (
 	"errors"
+	"slices"
 	"testing"
 
-	"github.com/carlmjohnson/flowmatic"
+	"github.com/earthboundkid/flowmatic/v2"
 )
 
 func TestEach_err(t *testing.T) {
 	a := errors.New("a")
 	b := errors.New("b")
-	errs := flowmatic.Each(1, []int{1, 2, 3}, func(i int) error {
+	errs := flowmatic.Each(1, slices.Values([]int{1, 2, 3}), func(i int) error {
 		switch i {
 		case 1:
 			return a
